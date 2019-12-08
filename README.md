@@ -8,7 +8,7 @@ Nxxt is a completely stand-alone executable. It shouldn't have any dependencies.
 
 
 ### Windows Defender
-Running Nxxt might greet you with a "Windows protected your PC" screen.
+Running Nxxt between versions B1 and B2 might greet you with a "Windows protected your PC" screen.
 
 This is Windows Defender's SmartScreen. It recognises .exe files with no publisher
 and gives you a fair warning. To run the executable anyways (in case you see this),
