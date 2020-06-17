@@ -10,13 +10,11 @@ This is how it'll look!
 
 ![Cool new UI!](https://imgur.com/UyO5wbm.png)
 
-# Nxxt
-A repository for releases of Nxxt Autoclicker.
+
+
+This is a repository for releases of Nxxt Autoclicker.
 This is where all of the executables will be posted as releases.
 Yes, source code will be uploaded here.
-
-## Using Nxxt
-Nxxt is a completely stand-alone executable. It shouldn't have any dependencies.
 
 ## Building Nxxt
 If you want to get a probably-not-working-but-maybe-has-cool-things version of Nxxt, you can
