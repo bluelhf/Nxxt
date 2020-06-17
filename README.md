@@ -6,6 +6,15 @@ Yes, source code will be uploaded here.
 ## Using Nxxt
 Nxxt is a completely stand-alone executable. It shouldn't have any dependencies.
 
+## Building Nxxt
+If you want to get a probably-not-working-but-maybe-has-cool-things version of Nxxt, you can
+build it directly from this repository!
+1. [Install Maven.](https://maven.apache.org/install.html)
+2. Download and extract this repository.
+3. Open Terminal / Command Prompt in the extracted repository
+4. Run `mvn verify`
+5. Get your .jar from the `target` subdirectory
+6. Profit!
 
 ### Windows Defender
 Running Nxxt between versions B1 and B2 might greet you with a "Windows protected your PC" screen.
