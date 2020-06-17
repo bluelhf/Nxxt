@@ -25,44 +25,26 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 
-public class Controller implements NativeKeyListener
-{
-    @FXML
-    Label minCPS;
-    @FXML
-    Label maxCPS;
-    @FXML
-    ChoiceBox<String> clickTypeBox;
-    @FXML
-    CheckBox jitterBox;
-    @FXML
-    HBox jitterControl;
-    @FXML
-    Slider jitterSlider;
-    @FXML
-    TextField jitterText;
-    @FXML
-    CheckBox lfoBox;
-    @FXML
-    HBox lfoControl;
-    @FXML
-    Slider lfoSlider;
-    @FXML
-    TextField lfoText;
-    @FXML
-    Slider delaySlider;
-    @FXML
-    TextField delayText;
-    @FXML
-    Text version;
-    @FXML
-    Button startButton;
-    @FXML
-    Button stopButton;
-    @FXML
-    TitledPane optionsPane;
-    @FXML
-    TextField keybindField;
+public class Controller implements NativeKeyListener {
+    @FXML Label minCPS;
+    @FXML Label maxCPS;
+    @FXML ChoiceBox<String> clickTypeBox;
+    @FXML CheckBox jitterBox;
+    @FXML HBox jitterControl;
+    @FXML Slider jitterSlider;
+    @FXML TextField jitterText;
+    @FXML CheckBox lfoBox;
+    @FXML HBox lfoControl;
+    @FXML Slider lfoSlider;
+    @FXML TextField lfoText;
+    @FXML Slider delaySlider;
+    @FXML TextField delayText;
+    @FXML Text version;
+    @FXML Button startButton;
+    @FXML Button stopButton;
+    @FXML TitledPane optionsPane;
+    @FXML TextField keybindField;
+
     boolean active = false;
     double delay;
     double noLFOdelay;

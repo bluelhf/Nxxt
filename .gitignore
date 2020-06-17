@@ -1,1 +1,11 @@
 src/main/resources/img.jpg
+
+.idea/
+
+Nxxt.iml
+
+target/
+
+dependency-reduced-pom.xml
+
+pom.xml
