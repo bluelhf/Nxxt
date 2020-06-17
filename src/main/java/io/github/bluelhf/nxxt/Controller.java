@@ -156,6 +156,7 @@ public class Controller implements NativeKeyListener {
 
         // Make sure sliders edit our internal values
         this.delaySlider.valueProperty().addListener((observableValue, oldValue, newValue) -> {
+            lfoBounder();
             this.delayText.setText(String.valueOf(newValue.intValue()));
             _updateDelay();
         });
@@ -242,6 +243,17 @@ public class Controller implements NativeKeyListener {
     }
 
 
+
+    private void lfoBounder() {
+        if (_getDelay() < this.minDelay) {
+            this.lfoBox.setDisable(true);
+            this.lfoBox.setSelected(false);
+        } else {
+            this.lfoBox.setDisable(false);
+        }
+        _onLFOBox();
+
+    }
     private double _getDelay() {
         return this.delay;
     }
@@ -328,8 +340,8 @@ public class Controller implements NativeKeyListener {
                 // Handles Jitter
                 if (doJitter()) {
                     Point location = MouseInfo.getPointerInfo().getLocation();
-                    location.x = (int) (location.x + (Math.random() - Math.nextDown(0.5D)) * 2.0D * getJitter());
-                    location.y = (int) (location.y + (Math.random() - Math.nextDown(0.5D)) * 2.0D * getJitter());
+                    location.x = (int) (location.x + (Math.random()/Math.nextDown(1) - 0.5D) * 2.0D * getJitter());
+                    location.y = (int) (location.y + (Math.random()/Math.nextDown(1) - 0.5D) * 2.0D * getJitter());
                     robot.mouseMove(location.x, location.y);
                 }
 
@@ -462,8 +474,13 @@ public class Controller implements NativeKeyListener {
                 stage.close();
                 changeKeybindButton.setDisable(false);
             });
+            stage.setOnCloseRequest(windowEvent -> {
+                changeKeybindButton.setDisable(false);
+            });
+
             stage.setTitle("Keybind Changer");
             stage.setScene(scene);
+            stage.initStyle(StageStyle.UTILITY);
             stage.show();
         } catch (IOException e) {
             Nxxt.getLogger().severe("Failed to start Keybind Changer UI: Could not find file!");
@@ -483,7 +500,7 @@ public class Controller implements NativeKeyListener {
         modifiers.put(isMac() ? "CMD" : "CTRL", event.isShortcutDown());
 
         List<String> keys = modifiers.keySet().stream().filter(modifiers::get).collect(Collectors.toList());
-        if (!text.equals("")) keys.add(text.toUpperCase());
+        keys.add(text.toUpperCase());
         return String.join(" + ", keys);
     }
 
