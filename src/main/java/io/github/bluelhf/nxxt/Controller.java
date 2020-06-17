@@ -468,11 +468,15 @@ public class Controller implements NativeKeyListener {
             root = FXMLLoader.load(getClass().getResource("/keybind_ui.fxml"));
             Stage stage = new Stage();
             Scene scene = new Scene(root, 600, 400);
-            scene.setOnKeyReleased(keyEvent -> {
+            scene.setOnKeyPressed(keyEvent -> {
                 this.keybindEvent = keyEvent;
-                changeKeybindButton.setText("Change Keybind (" + keyEventText(keyEvent).toUpperCase() + ")");
-                stage.close();
-                changeKeybindButton.setDisable(false);
+                String text = keyEventText(keyEvent).toUpperCase();
+                if (!text.equals("-1")) {
+                    changeKeybindButton.setText("Change Keybind (" + text + ")");
+                    stage.close();
+                    changeKeybindButton.setDisable(false);
+                }
+
             });
             stage.setOnCloseRequest(windowEvent -> {
                 changeKeybindButton.setDisable(false);
@@ -493,14 +497,26 @@ public class Controller implements NativeKeyListener {
 
     private String keyEventText(KeyEvent event) {
         String text = event.getText();
-        if (text.charAt(0) == 9) text = "TAB";
         HashMap<String, Boolean> modifiers = new HashMap<>();
         modifiers.put("ALT", event.isAltDown());
         modifiers.put("SHIFT", event.isShiftDown());
         modifiers.put(isMac() ? "CMD" : "CTRL", event.isShortcutDown());
 
+        // Edge-case: Function keys
+        if (event.getCode().getCode() >= 112 && event.getCode().getCode() <= 123) text = event.getCode().getName();
+
+        // Edge-case: Modifier only (-1 means incomplete key)
+        if (modifiers.values().stream().anyMatch(Boolean::booleanValue) && text.length() == 0) return "-1";
+
+        // Edge-case: Default to NONE
+        if (modifiers.values().stream().noneMatch(Boolean::booleanValue) && text.length() == 0) return "NONE";
+
+        // Edge-case: Tabs
+        if (text.length() != 0 && text.charAt(0) == 9) text = "TAB";
+
+
         List<String> keys = modifiers.keySet().stream().filter(modifiers::get).collect(Collectors.toList());
-        keys.add(text.toUpperCase());
+        if (text.length() != 0) keys.add(text.toUpperCase());
         return String.join(" + ", keys);
     }
 
