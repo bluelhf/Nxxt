@@ -29,7 +29,7 @@ public class Launcher extends Application {
         }
 
         Scene scene = new Scene(root);
-        controller.initialise();
+        controller.initialise(stage);
         stage.setScene(scene);
         stage.setResizable(false);
 

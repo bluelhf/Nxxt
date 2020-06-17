@@ -12,8 +12,6 @@ public class Nxxt {
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new SimpleFormatter() {
             private static final String format = "[%1tF %1$tT] [%2$s] %3$s%n";
-
-
             public String format(LogRecord lr) {
                 return String.format(format, new Date(lr.getMillis()), lr.getLevel().getLocalizedName(), lr.getMessage());
             }

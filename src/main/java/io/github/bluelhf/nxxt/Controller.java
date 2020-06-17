@@ -3,8 +3,10 @@ package io.github.bluelhf.nxxt;
 import io.github.bluelhf.nxxt.ext.OpenSimplexNoise;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -13,9 +15,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 import org.jnativehook.NativeInputEvent;
@@ -26,6 +30,7 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,12 +40,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-
+/**
+ * Controller is the meat and bones of Nxxt.
+ * It contains most of the code which interfaces with the GUI (via JavaFX) to read and write values.
+ * If you can see it, chances are it's being done by Controller.
+ */
 public class Controller implements NativeKeyListener {
-    @FXML Label minCPS;
-    @FXML Label maxCPS;
-    @FXML ChoiceBox<String> clickTypeBox;
-    @FXML CheckBox jitterBox;
+
+
+    // The FXML annotation lets JavaFX know that we want these values replaced with the JavaFX objects whose ids correspond to the field names.
+    @FXML
+    Label minCPS;
+    @FXML
+    Label maxCPS;
+    @FXML
+    ChoiceBox<String> clickTypeBox;
+    @FXML
+    CheckBox jitterBox;
     @FXML
     HBox jitterControl;
     @FXML
@@ -70,49 +86,72 @@ public class Controller implements NativeKeyListener {
     @FXML
     Button changeKeybindButton;
 
+    @FXML
+    DialogPane errorDialog;
+    @FXML
+    Label exception;
+    @FXML
+    Text exception_st;
 
     KeyEvent keybindEvent = null;
 
+    // These are Nxxt's own values it has to keep track of outside the GUI
     boolean active = false;
     double delay;
     double noLFOdelay;
 
+    Stage stage;
+
+    // These are the external parts - Robot for controlling the mouse, OpenSimplexNoise for generating LFO delay.
     Robot robot;
     OpenSimplexNoise noise;
 
+    // minDelay is the smallest possible delay we can wait in the program.
+    // If we fail to calculate it for some reason, it defaults to 20.
     double minDelay = 20.0D;
 
+    // Yay.
     int[] konami = {57416, 57416, 57424, 57424, 57419, 57421, 57419, 57421, 48, 30};
     int idx = 0;
 
 
     public void shutdown() {
+        try {
+            GlobalScreen.unregisterNativeHook();
+        } catch (NativeHookException e) {
+            Nxxt.getLogger().severe("Failed to unregister JNativeHook!");
+        }
         turnOff();
     }
 
-    public void initialise() {
+    private void initJNI() throws NativeHookException {
+        GlobalScreen.registerNativeHook();
+        Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
+        logger.setLevel(Level.OFF);
+        logger.setUseParentHandlers(false);
+    }
+
+    public void initialise(Stage stage) {
+        this.stage = stage;
+        _fail(new Exception("fuck fucking shit fuck something went wrong"));
         try {
             this.robot = new Robot();
         } catch (AWTException e) {
-            e.printStackTrace();
+            Nxxt.getLogger().severe("Failed to create a Robot instance!");
+            Runtime.getRuntime().exit(1);
         }
         try {
-            GlobalScreen.registerNativeHook();
-            Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
-            logger.setLevel(Level.OFF);
-            logger.setUseParentHandlers(false);
+            initJNI();
+            GlobalScreen.addNativeKeyListener(this);
         } catch (NativeHookException e) {
             e.printStackTrace();
         }
-        GlobalScreen.addNativeKeyListener(this);
 
         noise = new OpenSimplexNoise();
 
-        Nxxt.getLogger().info("" + GlobalScreen.getNativeMonitors()[0].getX() + ", " + GlobalScreen.getNativeMonitors()[0].getX());
+        _updateDelay();
 
-
-        this.delay = (long) this.delaySlider.getValue();
-        this.noLFOdelay = this.delay;
+        // Make sure sliders edit our internal values
         this.delaySlider.valueProperty().addListener((observableValue, oldValue, newValue) -> {
             this.delayText.setText(String.valueOf(newValue.intValue()));
             _updateDelay();
@@ -120,8 +159,10 @@ public class Controller implements NativeKeyListener {
         this.jitterSlider.valueProperty().addListener((observableValue, number, newValue) -> this.jitterText.setText(String.valueOf(newValue.intValue())));
         this.lfoSlider.valueProperty().addListener((observableValue, number, newValue) -> {
             this.lfoText.setText(String.valueOf(newValue.intValue()));
-            updateCPS();
+            _updateCPS();
         });
+
+        // Read properties file to get the project version
         Properties properties = new Properties();
         InputStream propertyStream = Nxxt.class.getResourceAsStream("/info.properties");
         try {
@@ -130,10 +171,11 @@ public class Controller implements NativeKeyListener {
             Nxxt.getLogger().severe("Failed to read properties!");
         }
         this.version.setText(properties.getProperty("version"));
-        updateCPS();
+        _updateCPS();
         Nxxt.getLogger().fine("Initialised controller");
 
 
+        // We calculate the length of a time slice here. This is the minimum time Thread#sleep(long ms) can wait.
         new Thread(() -> {
             long start = System.currentTimeMillis();
             try {
@@ -144,50 +186,69 @@ public class Controller implements NativeKeyListener {
         });
     }
 
-
+    /**
+     * @return True if the LFO box is checked in the GUI.
+     */
     public boolean doLFO() {
         return this.lfoBox.isSelected();
     }
 
-
+    /**
+     * @return The value of the LFO slider.
+     */
     public double getLFO() {
         return this.lfoSlider.getValue();
     }
 
-
+    /**
+     * @return True if the Jitter box is checked in the GUI.
+     */
     public boolean doJitter() {
         return this.jitterBox.isSelected();
     }
 
-
+    /**
+     * @return The value of the Jitter slider.
+     */
     public double getJitter() {
         return this.jitterSlider.getValue();
     }
 
-
+    /**
+     * @return The delay, as specified by a combination of the associated text box and slider. The textbox overrides the value of the slider when this is called.
+     */
     public double getDelay() {
         _updateDelay();
         return this.delay;
     }
 
+    /**
+     * Sets our internal delay and saves it, displaying it in the GUI.
+     */
     public void setDelay(double newDelay) {
         this.delay = newDelay;
         _saveDelay();
     }
 
 
-    public String getClickType() { return this.clickTypeBox.getValue(); }
+    /**
+     * @return The value of the drop-down click type box.
+     */
+    public String getClickType() {
+        return this.clickTypeBox.getValue();
+    }
 
 
+    private double _getDelay() {
+        return this.delay;
+    }
 
-    private double _getDelay() { return this.delay; }
+    private void _setDelay(double newDelay) {
+        this.delay = newDelay;
+    }
 
-
-
-    private void _setDelay(double newDelay) { this.delay = newDelay; }
-
-
-    public void _updateDelay() {
+    @FXML
+    private void _updateDelay() {
         String delayField = this.delayText.getText();
         String stripped = Arrays.stream(delayField.split("")).filter(s -> s.matches("[0-9]")).collect(Collectors.joining());
         this.delayText.setText(stripped);
@@ -196,27 +257,35 @@ public class Controller implements NativeKeyListener {
         _setDelay(this.delaySlider.getValue());
         if (!this.active)
             this.noLFOdelay = this.delay;
-        updateCPS();
+        _updateCPS();
     }
 
-    public void _saveDelay() {
+    private void _saveDelay() {
         Nxxt.getLogger().finest("saving delay " + this.delay);
         this.delaySlider.setValue(this.delay);
         this.delayText.setText(String.valueOf(Math.round(this.delay)));
     }
 
-    public void onJitterBox() {
+    /**
+     * Not required by outsiders, only here for JavaFX.
+     * Triggered when the Jitter checkbox' state changes.
+     */
+    public void _onJitterBox() {
         this.jitterControl.setVisible(doJitter());
         Nxxt.getLogger().fine("Toggled jitter box");
     }
 
-    public void onLFOBox() {
+    /**
+     * Not required by outsiders, only here for JavaFX.
+     * Triggered when the LFO checkbox' state changes.
+     */
+    public void _onLFOBox() {
         _updateDelay();
         this.lfoControl.setVisible(doLFO());
         Nxxt.getLogger().fine("Toggled LFO box");
     }
 
-    public void updateCPS() {
+    public void _updateCPS() {
         if (this.delay > this.minDelay) {
             DecimalFormat df = new DecimalFormat("###0.##");
             double minDelay = 1000.0D / (doLFO() ? this.noLFOdelay : this.delay);
@@ -277,7 +346,7 @@ public class Controller implements NativeKeyListener {
         if (doLFO()) {
             this.delay = this.noLFOdelay;
             _saveDelay();
-            updateCPS();
+            _updateCPS();
         }
         this.active = false;
         this.optionsPane.setDisable(false);
@@ -294,7 +363,8 @@ public class Controller implements NativeKeyListener {
         }
     }
 
-    public void updateJitter() {
+    @FXML
+    private void _updateJitter() {
         String jitterField = this.jitterText.getText();
         String stripped = Arrays.stream(jitterField.split("")).filter(s -> s.matches("[0-9]")).collect(Collectors.joining());
         this.jitterText.setText(stripped);
@@ -304,6 +374,7 @@ public class Controller implements NativeKeyListener {
 
 
     private int getModifiers(KeyEvent ev) {
+        if (ev == null) return 0;
         int value = 0;
         if (ev.isAltDown()) value |= NativeInputEvent.ALT_MASK;
         if (ev.isControlDown()) value |= NativeInputEvent.CTRL_MASK;
@@ -314,7 +385,8 @@ public class Controller implements NativeKeyListener {
 
     public void nativeKeyPressed(NativeKeyEvent ev) {
         int evModifiers = ev.getModifiers();
-        if (NativeInputEvent.getModifiersText(evModifiers).contains(NativeInputEvent.getModifiersText(getModifiers(keybindEvent))) && ev.getRawCode() == keybindEvent.getCode().getCode())
+        if (keybindEvent != null && NativeInputEvent.getModifiersText(evModifiers).contains(NativeInputEvent.getModifiersText(getModifiers(keybindEvent)))
+                && ev.getRawCode() == keybindEvent.getCode().getCode())
             toggle();
 
 
@@ -329,14 +401,11 @@ public class Controller implements NativeKeyListener {
                 image.setCache(true);
                 image.setPreserveRatio(true);
                 alert.setGraphic(new ImageView("img.jpg"));
-            alert.setContentText("© Suhoset");
-            alert.show();
-        });
-            this.idx = 0; }
-        else if (ev.getKeyCode() == this.konami[this.idx])
-        { this.idx++;
-            this.idx %= this.konami.length; }
-        else { this.idx = 0; }
+                alert.setContentText("© Suhoset");
+                alert.show();
+            });
+            this.idx = 0; } else if (ev.getKeyCode() == this.konami[this.idx]) { this.idx++;
+            this.idx %= this.konami.length; } else { this.idx = 0; }
 
 
         String modifiers = NativeInputEvent.getModifiersText(ev.getModifiers());
@@ -391,6 +460,63 @@ public class Controller implements NativeKeyListener {
         List<String> keys = modifiers.keySet().stream().filter(modifiers::get).collect(Collectors.toList());
         if (!text.equals("")) keys.add(text.toUpperCase());
         return String.join(" + ", keys);
+    }
+
+    private void _fail(Exception e) {
+        Parent root = null;
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fail_ui.fxml"));
+            loader.setController(this);
+            root = loader.load();
+        } catch (IOException ex) {
+            Nxxt.getLogger().severe("Oh, fuck me... Failed to load error dialog. Seriously?");
+            ex.printStackTrace();
+            Runtime.getRuntime().exit(-1);
+        }
+
+        if (exception != null && exception_st != null) {
+            exception.setText(e.getLocalizedMessage() != null ? e.getLocalizedMessage() : (e.getMessage() != null ? e.getMessage() : "No details found."));
+            exception_st.setText("");
+            Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).forEachOrdered((s) -> exception_st.setText(exception_st.getText() + "\n" + s));
+        }
+
+        Stage stage = new Stage();
+        stage.initStyle(StageStyle.UTILITY);
+
+
+        try {
+            Class<?> dialogClass = errorDialog.getClass();
+            Field detailsButtonField = dialogClass.getDeclaredField("detailsButton");
+            detailsButtonField.setAccessible(true);
+            Node detailsButton = (Node) detailsButtonField.get(errorDialog);
+            EventHandler<? super MouseEvent> oldMouseClicked = detailsButton.getOnMouseClicked();
+            stage.setResizable(false);
+            detailsButton.setOnMouseReleased(mouseEvent -> {
+                if (oldMouseClicked != null) oldMouseClicked.handle(mouseEvent);
+                Platform.runLater(() -> errorDialog.getScene().getWindow().sizeToScene());
+            });
+
+        } catch (NoSuchFieldException | IllegalAccessException exc) {
+            exc.printStackTrace();
+        }
+
+        errorDialog.lookupButton(ButtonType.CLOSE).setOnMouseClicked(mouseEvent -> {
+            stage.close();
+            this.shutdown();
+            this.stage.close();
+            Runtime.getRuntime().exit(1);
+        });
+
+
+        Scene scene = new Scene(root);
+
+        stage.setTitle("An exception occurred.");
+        stage.setScene(scene);
+        stage.show();
+
+        stage.setOnCloseRequest(windowEvent -> Runtime.getRuntime().exit(1));
+
+        Platform.runLater(() -> this.stage.hide());
 
     }
 }

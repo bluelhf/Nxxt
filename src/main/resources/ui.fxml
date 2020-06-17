@@ -62,19 +62,21 @@
                         </children>
                     </HBox>
                     <VBox>
-                        <CheckBox fx:id="jitterBox" mnemonicParsing="false" onAction="#onJitterBox" text="Jitter" />
+                        <CheckBox fx:id="jitterBox" mnemonicParsing="false" onAction="#_onJitterBox" text="Jitter"/>
                         <HBox fx:id="jitterControl" prefHeight="100.0" prefWidth="200.0" translateX="5.0" visible="false">
                             <Label text="Jitter Amount" />
                             <Slider fx:id="jitterSlider" max="25.0" maxWidth="120.0" min="1.0" translateX="5.0" translateY="2.0" value="4.0" />
-                            <TextField fx:id="jitterText" onAction="#updateJitter" prefWidth="40.0" text="4" translateX="5.0" translateY="-4.0" />
+                            <TextField fx:id="jitterText" onAction="#_updateJitter" prefWidth="40.0" text="4"
+                                       translateX="5.0" translateY="-4.0"/>
                         </HBox>
                     </VBox>
                     <VBox layoutX="19.0" layoutY="128.0">
-                        <CheckBox fx:id="lfoBox" mnemonicParsing="false" onAction="#onLFOBox" text="Delay LFO" />
+                        <CheckBox fx:id="lfoBox" mnemonicParsing="false" onAction="#_onLFOBox" text="Delay LFO"/>
                         <HBox fx:id="lfoControl" prefHeight="100.0" prefWidth="200.0" translateX="5.0" visible="false">
                             <Label text="Multiplier" />
                             <Slider fx:id="lfoSlider" max="10.0" maxWidth="140.0" min="1.0" translateX="5.0" translateY="2.0" value="2.0" />
-                            <TextField fx:id="lfoText" onAction="#updateJitter" prefWidth="40.0" text="2" translateX="5.0" translateY="-4.0" />
+                            <TextField fx:id="lfoText" onAction="#_updateJitter" prefWidth="40.0" text="2"
+                                       translateX="5.0" translateY="-4.0"/>
                         </HBox>
                     </VBox>
                 </VBox>
