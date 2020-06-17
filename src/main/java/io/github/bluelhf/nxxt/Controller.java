@@ -1,8 +1,8 @@
 package io.github.bluelhf.nxxt;
 
+import io.github.bluelhf.nxxt.ext.OpenSimplexNoise;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 
@@ -30,28 +29,45 @@ public class Controller implements NativeKeyListener {
     @FXML Label maxCPS;
     @FXML ChoiceBox<String> clickTypeBox;
     @FXML CheckBox jitterBox;
-    @FXML HBox jitterControl;
-    @FXML Slider jitterSlider;
-    @FXML TextField jitterText;
-    @FXML CheckBox lfoBox;
-    @FXML HBox lfoControl;
-    @FXML Slider lfoSlider;
-    @FXML TextField lfoText;
-    @FXML Slider delaySlider;
-    @FXML TextField delayText;
-    @FXML Text version;
-    @FXML Button startButton;
-    @FXML Button stopButton;
-    @FXML TitledPane optionsPane;
-    @FXML TextField keybindField;
+    @FXML
+    HBox jitterControl;
+    @FXML
+    Slider jitterSlider;
+    @FXML
+    TextField jitterText;
+    @FXML
+    CheckBox lfoBox;
+    @FXML
+    HBox lfoControl;
+    @FXML
+    Slider lfoSlider;
+    @FXML
+    TextField lfoText;
+    @FXML
+    Slider delaySlider;
+    @FXML
+    TextField delayText;
+    @FXML
+    Text version;
+    @FXML
+    Button startButton;
+    @FXML
+    Button stopButton;
+    @FXML
+    TitledPane optionsPane;
+    @FXML
+    TextField keybindField;
 
     boolean active = false;
     double delay;
     double noLFOdelay;
+
     Robot robot;
+    OpenSimplexNoise noise;
+
     double minDelay = 20.0D;
 
-    int[] konami = { 57416, 57416, 57424, 57424, 57419, 57421, 57419, 57421, 48, 30 };
+    int[] konami = {57416, 57416, 57424, 57424, 57419, 57421, 57419, 57421, 48, 30};
     int idx = 0;
 
 
@@ -66,13 +82,12 @@ public class Controller implements NativeKeyListener {
             e.printStackTrace();
         }
 
+        noise = new OpenSimplexNoise();
+
         Nxxt.getLogger().info("" + GlobalScreen.getNativeMonitors()[0].getX() + ", " + GlobalScreen.getNativeMonitors()[0].getX());
 
 
-
-
-
-        this.delay = (long)this.delaySlider.getValue();
+        this.delay = (long) this.delaySlider.getValue();
         this.noLFOdelay = this.delay;
         this.delaySlider.valueProperty().addListener((observableValue, oldValue, newValue) -> {
             this.delayText.setText(String.valueOf(newValue.intValue()));
@@ -95,32 +110,35 @@ public class Controller implements NativeKeyListener {
         Nxxt.getLogger().fine("Initialised controller");
 
 
-
-
-
-
         new Thread(() -> {
-            long start = System.currentTimeMillis(); try {
+            long start = System.currentTimeMillis();
+            try {
                 Thread.sleep(1L);
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
             this.minDelay = (System.currentTimeMillis() - start);
         });
     }
 
 
-    public boolean doLFO() { return this.lfoBox.isSelected(); }
+    public boolean doLFO() {
+        return this.lfoBox.isSelected();
+    }
 
 
-
-    public double getLFO() { return this.lfoSlider.getValue(); }
-
-
-
-    public boolean doJitter() { return this.jitterBox.isSelected(); }
+    public double getLFO() {
+        return this.lfoSlider.getValue();
+    }
 
 
+    public boolean doJitter() {
+        return this.jitterBox.isSelected();
+    }
 
-    public double getJitter() { return this.jitterSlider.getValue(); }
+
+    public double getJitter() {
+        return this.jitterSlider.getValue();
+    }
 
 
     public double getDelay() {
@@ -203,29 +221,27 @@ public class Controller implements NativeKeyListener {
         (new Thread(() -> {
             this.noLFOdelay = getDelay();
             while (this.active) {
-                Point location = MouseInfo.getPointerInfo().getLocation();
 
                 if (doJitter()) {
-                    location.x = (int)(location.x + (Math.random() - Math.nextDown(0.5D)) * 2.0D * getJitter());
-                    location.y = (int)(location.y + (Math.random() - Math.nextDown(0.5D)) * 2.0D * getJitter());
+                    Point location = MouseInfo.getPointerInfo().getLocation();
+                    location.x = (int) (location.x + (Math.random() - Math.nextDown(0.5D)) * 2.0D * getJitter());
+                    location.y = (int) (location.y + (Math.random() - Math.nextDown(0.5D)) * 2.0D * getJitter());
+                    robot.mouseMove(location.x, location.y);
                 }
-                Nxxt.getLogger().finest("Attempting click at " + location.x + ", " + location.y);
-                robot.mouseMove(location.x, location.y);
                 robot.mousePress(mask);
                 robot.mouseRelease(mask);
 
                 if (doLFO()) {
-                    double LFO = ThreadLocalRandom.current().nextDouble(-getLFO(), Math.nextUp(getLFO()));
-                    if (Math.abs(this.noLFOdelay - this.delay + LFO) < getLFO()) {
-                        this.delay = Math.max(this.delaySlider.getMin(), Math.min(this.delaySlider.getMax(), this.delay + LFO));
-                        Platform.runLater(this::_saveDelay);
-                    }
+                    // Yay OpenSimplexNoise! Thank you Kurt Spencer :)
+                    this.delay = this.noLFOdelay + noise.eval((System.currentTimeMillis() % 1337.69420) * getLFO(), 0) * getLFO();
+                    Platform.runLater(this::_saveDelay);
                 }
 
                 if (this.delay > this.minDelay)
                     try {
-                        Thread.sleep((long)this.delay);
-                    } catch (Exception ignored) {}
+                        Thread.sleep((long) this.delay);
+                    } catch (Exception ignored) {
+                    }
             }
         })).start();
         Nxxt.getLogger().info("Started with delay of " + this.delaySlider.getValue() + " and button mask of " + mask);

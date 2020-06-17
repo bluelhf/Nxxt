@@ -1,4 +1,5 @@
 package io.github.bluelhf.nxxt;
+
 import java.util.Date;
 import java.util.logging.*;
 
@@ -6,6 +7,7 @@ public class Nxxt {
     static Logger logger = Logger.getLogger("Nxxt");
 
     public static void main(String[] args) {
+
         getLogger().setUseParentHandlers(false);
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new SimpleFormatter() {
