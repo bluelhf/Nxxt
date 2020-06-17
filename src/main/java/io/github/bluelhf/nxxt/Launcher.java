@@ -5,6 +5,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.InputStream;
@@ -36,6 +37,7 @@ public class Launcher extends Application {
         Scene scene = new Scene(root);
         controller.initialise(stage);
         stage.setScene(scene);
+        stage.getIcons().add(new Image("/logo.png"));
         stage.setResizable(false);
 
         stage.setTitle("Nxxt Autoclicker " + properties.getProperty("version"));
