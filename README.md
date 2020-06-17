@@ -1,3 +1,11 @@
+# **BIG NEWS!**
+
+Future releases of Nxxt (b4 and above) will be made in **Java!**
+
+This means cross-platform compatibility and a slick GUI redesign!
+Unfortunately, this also means that I have to recode Nxxt from scratch,
+which will take time..
+
 # Nxxt
 A repository for releases of Nxxt Autoclicker.
 This is where all of the executables will be posted as releases.
