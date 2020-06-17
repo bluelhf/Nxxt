@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.collections.*?>
-<?import javafx.geometry.*?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-
+<?import java.lang.String?>
 <GridPane prefHeight="290.0" prefWidth="420.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.bluelhf.nxxt.Controller">
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" />
@@ -53,8 +52,14 @@
                         </font>
                     </Label>
                     <HBox prefHeight="100.0" prefWidth="200.0">
-                        <Label text="Change Keybind" translateY="3.0" />
-                        <TextField fx:id="keybindField" promptText="lol this doesn't work" translateX="5.0" />
+                        <children>
+                            <Button fx:id="changeKeybindButton" mnemonicParsing="false" onAction="#processKeybindChange"
+                                    text="Change Keybind (NONE)">
+                                <HBox.margin>
+                                    <Insets bottom="5.0"/>
+                                </HBox.margin>
+                            </Button>
+                        </children>
                     </HBox>
                     <VBox>
                         <CheckBox fx:id="jitterBox" mnemonicParsing="false" onAction="#onJitterBox" text="Jitter" />

@@ -2,25 +2,37 @@ package io.github.bluelhf.nxxt;
 
 import io.github.bluelhf.nxxt.ext.OpenSimplexNoise;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 import org.jnativehook.GlobalScreen;
+import org.jnativehook.NativeHookException;
 import org.jnativehook.NativeInputEvent;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
@@ -56,7 +68,10 @@ public class Controller implements NativeKeyListener {
     @FXML
     TitledPane optionsPane;
     @FXML
-    TextField keybindField;
+    Button changeKeybindButton;
+
+
+    KeyEvent keybindEvent = null;
 
     boolean active = false;
     double delay;
@@ -81,6 +96,15 @@ public class Controller implements NativeKeyListener {
         } catch (AWTException e) {
             e.printStackTrace();
         }
+        try {
+            GlobalScreen.registerNativeHook();
+            Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
+            logger.setLevel(Level.OFF);
+            logger.setUseParentHandlers(false);
+        } catch (NativeHookException e) {
+            e.printStackTrace();
+        }
+        GlobalScreen.addNativeKeyListener(this);
 
         noise = new OpenSimplexNoise();
 
@@ -233,7 +257,7 @@ public class Controller implements NativeKeyListener {
 
                 if (doLFO()) {
                     // Yay OpenSimplexNoise! Thank you Kurt Spencer :)
-                    this.delay = this.noLFOdelay + noise.eval((System.currentTimeMillis() % 1337.69420) * getLFO(), 0) * getLFO();
+                    this.delay = this.noLFOdelay + noise.eval(((System.currentTimeMillis() % 1337.69420) + 1) * getLFO(), 0) * getLFO();
                     Platform.runLater(this::_saveDelay);
                 }
 
@@ -279,18 +303,32 @@ public class Controller implements NativeKeyListener {
     }
 
 
+    private int getModifiers(KeyEvent ev) {
+        int value = 0;
+        if (ev.isAltDown()) value |= NativeInputEvent.ALT_MASK;
+        if (ev.isControlDown()) value |= NativeInputEvent.CTRL_MASK;
+        if (ev.isMetaDown()) value |= NativeInputEvent.META_MASK;
+        if (ev.isShiftDown()) value |= NativeInputEvent.SHIFT_MASK;
+        return value;
+    }
+
     public void nativeKeyPressed(NativeKeyEvent ev) {
-        Nxxt.getLogger().info("Key " + ev.getKeyCode() + ", idx = " + this.idx + ", konami: " + this.konami[this.idx % this.konami.length]);
-        if (ev.getKeyCode() == this.konami[this.idx] && this.idx == this.konami.length - 1)
-        { Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Hello!");
-            alert.setHeaderText("You have entered the konami code!");
-            ImageView image = new ImageView("img.jpg");
-            image.setSmooth(true);
-            image.setCache(true);
-            image.setPreserveRatio(true);
-            alert.setGraphic(new ImageView("img.jpg"));
+        int evModifiers = ev.getModifiers();
+        if (NativeInputEvent.getModifiersText(evModifiers).contains(NativeInputEvent.getModifiersText(getModifiers(keybindEvent))) && ev.getRawCode() == keybindEvent.getCode().getCode())
+            toggle();
+
+
+        Nxxt.getLogger().finest("Key " + ev.getKeyCode() + ", idx = " + this.idx + ", konami: " + this.konami[this.idx % this.konami.length]);
+        if (ev.getKeyCode() == this.konami[this.idx] && this.idx == this.konami.length - 1) {
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Hello!");
+                alert.setHeaderText("You have entered the konami code!");
+                ImageView image = new ImageView("img.jpg");
+                image.setSmooth(true);
+                image.setCache(true);
+                image.setPreserveRatio(true);
+                alert.setGraphic(new ImageView("img.jpg"));
             alert.setContentText("© Suhoset");
             alert.show();
         });
@@ -311,7 +349,48 @@ public class Controller implements NativeKeyListener {
         }
     }
 
-    public void nativeKeyReleased(NativeKeyEvent ev) {}
+    public void nativeKeyReleased(NativeKeyEvent ev) {
+    }
 
-    public void nativeKeyTyped(NativeKeyEvent ev) {}
+    public void nativeKeyTyped(NativeKeyEvent ev) {
+    }
+
+    public void processKeybindChange(ActionEvent event) {
+        changeKeybindButton.setDisable(true);
+        Parent root;
+        try {
+            root = FXMLLoader.load(getClass().getResource("/keybind_ui.fxml"));
+            Stage stage = new Stage();
+            Scene scene = new Scene(root, 600, 400);
+            scene.setOnKeyReleased(keyEvent -> {
+                this.keybindEvent = keyEvent;
+                changeKeybindButton.setText("Change Keybind (" + keyEventText(keyEvent).toUpperCase() + ")");
+                stage.close();
+                changeKeybindButton.setDisable(false);
+            });
+            stage.setTitle("Keybind Changer");
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            Nxxt.getLogger().severe("Failed to start Keybind Changer UI: Could not find file!");
+        }
+    }
+
+    private boolean isMac() {
+        return System.getProperty("os.name").toLowerCase().contains("mac");
+    }
+
+    private String keyEventText(KeyEvent event) {
+        String text = event.getText();
+        if (text.charAt(0) == 9) text = "TAB";
+        HashMap<String, Boolean> modifiers = new HashMap<>();
+        modifiers.put("ALT", event.isAltDown());
+        modifiers.put("SHIFT", event.isShiftDown());
+        modifiers.put(isMac() ? "CMD" : "CTRL", event.isShortcutDown());
+
+        List<String> keys = modifiers.keySet().stream().filter(modifiers::get).collect(Collectors.toList());
+        if (!text.equals("")) keys.add(text.toUpperCase());
+        return String.join(" + ", keys);
+
+    }
 }

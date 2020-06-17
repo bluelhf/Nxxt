@@ -1,7 +1,5 @@
 package io.github.bluelhf.nxxt;
 
-import java.io.InputStream;
-import java.util.Properties;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -9,12 +7,11 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import java.io.InputStream;
+import java.util.Properties;
 
 
-
-public class Launcher
-        extends Application
-{
+public class Launcher extends Application {
     static Controller controller = null;
 
     public void start(Stage stage) throws Exception {
@@ -41,7 +38,7 @@ public class Launcher
     }
 
     public static void main(String[] args) {
-        launch(new String[0]);
+        launch();
         Platform.exit();
         controller.shutdown();
     }

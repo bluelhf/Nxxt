@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<Pane xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+      minWidth="-Infinity" xmlns="http://javafx.com/javafx/10.0.2-internal">
+   <children>
+      <HBox alignment="CENTER" prefHeight="400.0" prefWidth="600.0">
+         <children>
+            <Text fill="#dddddd" strokeType="OUTSIDE" strokeWidth="0.0" text="Press any key..." textAlignment="CENTER"
+                  HBox.hgrow="NEVER">
+               <font>
+                  <Font size="51.0"/>
+               </font>
+            </Text>
+         </children>
+      </HBox>
+   </children>
+</Pane>
