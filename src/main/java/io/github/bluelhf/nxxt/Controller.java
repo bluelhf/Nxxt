@@ -135,7 +135,6 @@ public class Controller implements NativeKeyListener {
 
     // Called by the Launcher class - sets everything up.
     public void initialise(Stage stage) {
-        _fail(new Exception("Oops."));
         this.stage = stage;
         try {
             this.robot = new Robot();
