@@ -14,7 +14,12 @@ import java.util.Properties;
 public class Launcher extends Application {
     static Controller controller = null;
 
+    /**
+     * Main method to start the entire JavaFX applet
+     */
     public void start(Stage stage) throws Exception {
+
+        // Loads the JavaFX scene from ui.fxml
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui.fxml"));
         Parent root = loader.load();
         controller = loader.getController();
