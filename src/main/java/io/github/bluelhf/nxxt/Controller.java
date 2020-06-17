@@ -115,6 +115,7 @@ public class Controller implements NativeKeyListener {
     int idx = 0;
 
 
+    // Method to shut down properly - very important, actually!
     public void shutdown() {
         try {
             GlobalScreen.unregisterNativeHook();
@@ -124,6 +125,7 @@ public class Controller implements NativeKeyListener {
         turnOff();
     }
 
+    // Shorthand for JNI initialisation
     private void initJNI() throws NativeHookException {
         GlobalScreen.registerNativeHook();
         Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
@@ -131,20 +133,22 @@ public class Controller implements NativeKeyListener {
         logger.setUseParentHandlers(false);
     }
 
+    // Called by the Launcher class - sets everything up.
     public void initialise(Stage stage) {
+        _fail(new Exception("Oops."));
         this.stage = stage;
-        _fail(new Exception("fuck fucking shit fuck something went wrong"));
         try {
             this.robot = new Robot();
         } catch (AWTException e) {
             Nxxt.getLogger().severe("Failed to create a Robot instance!");
+            shutdown();
             Runtime.getRuntime().exit(1);
         }
         try {
             initJNI();
             GlobalScreen.addNativeKeyListener(this);
         } catch (NativeHookException e) {
-            e.printStackTrace();
+            _fail(e);
         }
 
         noise = new OpenSimplexNoise();
@@ -304,23 +308,33 @@ public class Controller implements NativeKeyListener {
     }
 
 
+    /**
+     * Turns Nxxt on.
+     */
     public void turnOn() {
+        // Disable options, toggle start and stop buttons, set active to true
         this.optionsPane.setDisable(true);
         this.startButton.setDisable(true);
         this.stopButton.setDisable(false);
         this.active = true;
+
         String val = getClickType();
         int mask = val.equals("Left") ? InputEvent.BUTTON1_DOWN_MASK : (val.equals("Right") ? InputEvent.BUTTON2_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK);
+
+        // This is the part that actually clicks!
         (new Thread(() -> {
             this.noLFOdelay = getDelay();
             while (this.active) {
 
+                // Handles Jitter
                 if (doJitter()) {
                     Point location = MouseInfo.getPointerInfo().getLocation();
                     location.x = (int) (location.x + (Math.random() - Math.nextDown(0.5D)) * 2.0D * getJitter());
                     location.y = (int) (location.y + (Math.random() - Math.nextDown(0.5D)) * 2.0D * getJitter());
                     robot.mouseMove(location.x, location.y);
                 }
+
+                // Click-click!
                 robot.mousePress(mask);
                 robot.mouseRelease(mask);
 
@@ -330,6 +344,7 @@ public class Controller implements NativeKeyListener {
                     Platform.runLater(this::_saveDelay);
                 }
 
+                // This is the delay in milliseconds - if it's less than one timeslice, do nothing and go as fast as you can.
                 if (this.delay > this.minDelay)
                     try {
                         Thread.sleep((long) this.delay);
@@ -340,14 +355,21 @@ public class Controller implements NativeKeyListener {
         Nxxt.getLogger().info("Started with delay of " + this.delaySlider.getValue() + " and button mask of " + mask);
     }
 
+    /**
+     * Turns Nxxt off.
+     */
     public void turnOff() {
         if (!this.active)
             return;
+
+        // Reset the delay to what it was before Nxxt was started
         if (doLFO()) {
             this.delay = this.noLFOdelay;
             _saveDelay();
             _updateCPS();
         }
+
+        // Undo the things we did when we started Nxxt
         this.active = false;
         this.optionsPane.setDisable(false);
         this.startButton.setDisable(false);
@@ -355,6 +377,10 @@ public class Controller implements NativeKeyListener {
         Nxxt.getLogger().info("Stopped");
     }
 
+
+    /**
+     * Toggles Nxxt.
+     */
     public void toggle() {
         if (this.active) {
             turnOff();
@@ -462,7 +488,7 @@ public class Controller implements NativeKeyListener {
         return String.join(" + ", keys);
     }
 
-    private void _fail(Exception e) {
+    protected void _fail(Exception e) {
         Parent root = null;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fail_ui.fxml"));
