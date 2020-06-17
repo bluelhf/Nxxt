@@ -8,7 +8,7 @@ which will take time..
 
 This is how it'll look!
 
-![Cool new UI!](https://imgur.com/dbsNB6f.png)
+![Cool new UI!](https://imgur.com/UyO5wbm.png)
 
 # Nxxt
 A repository for releases of Nxxt Autoclicker.
