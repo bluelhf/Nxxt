@@ -448,10 +448,13 @@ public class Controller implements NativeKeyListener {
         String modifiers = NativeInputEvent.getModifiersText(ev.getModifiers());
         Nxxt.getLogger().finest("Got key press " + modifiers + " + " + ev.getKeyCode());
         if (modifiers.equals("Ctrl") && ev
-                .getKeyCode() == 49) {
+                .getKeyCode() == 3663) {
             shutdown();
             Platform.exit();
             Runtime.getRuntime().exit(0);
+        }
+        if (modifiers.equals("Ctrl") && ev.getKeyCode() == 3667) {
+            Platform.runLater(() -> _fail(new Exception("Ctrl + Delete force-kill")));
         }
     }
 
