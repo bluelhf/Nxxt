@@ -38,8 +38,8 @@
                     </HBox>
                     <HBox translateY="2.0">
                         <Label text="Click Delay" />
-                        <Slider fx:id="delaySlider" max="500.0" min="1.0" translateX="2.0" translateY="2.0" value="55" />
-                        <TextField fx:id="delayText" onAction="#_updateDelay" prefWidth="40.0" text="55" translateX="4.0" translateY="-5.0" />
+                        <Slider fx:id="delaySlider" max="500.0" min="1.0" translateX="2.0" translateY="2.0" value="70" />
+                        <TextField fx:id="delayText" onAction="#delayTextOverride" prefWidth="40.0" text="70" translateX="4.0" translateY="-5.0" />
                     </HBox>
                     <Label fx:id="minCPS" text="Min. CPS: 000.00" textFill="#797979" translateY="-5.0">
                         <font>
@@ -52,21 +52,19 @@
                         </font>
                     </Label>
                     <HBox prefHeight="100.0" prefWidth="200.0">
-                        <children>
-                            <Button fx:id="changeKeybindButton" mnemonicParsing="false" onAction="#processKeybindChange"
-                                    text="Change Keybind (NONE)">
-                                <HBox.margin>
-                                    <Insets bottom="5.0"/>
-                                </HBox.margin>
-                            </Button>
-                        </children>
+                        <Button fx:id="changeKeybindButton" mnemonicParsing="false" onAction="#processKeybindChange"
+                                text="Change Keybind (NONE)">
+                            <HBox.margin>
+                                <Insets bottom="5.0"/>
+                            </HBox.margin>
+                        </Button>
                     </HBox>
                     <VBox>
                         <CheckBox fx:id="jitterBox" mnemonicParsing="false" onAction="#_onJitterBox" text="Jitter"/>
                         <HBox fx:id="jitterControl" prefHeight="100.0" prefWidth="200.0" translateX="5.0" visible="false">
                             <Label text="Jitter Amount" />
                             <Slider fx:id="jitterSlider" max="25.0" maxWidth="120.0" min="1.0" translateX="5.0" translateY="2.0" value="4.0" />
-                            <TextField fx:id="jitterText" onAction="#_updateJitter" prefWidth="40.0" text="4"
+                            <TextField fx:id="jitterText" onAction="#jitterTextOverride" prefWidth="40.0" text="4"
                                        translateX="5.0" translateY="-4.0"/>
                         </HBox>
                     </VBox>
@@ -74,8 +72,8 @@
                         <CheckBox fx:id="lfoBox" mnemonicParsing="false" onAction="#_onLFOBox" text="Delay LFO"/>
                         <HBox fx:id="lfoControl" prefHeight="100.0" prefWidth="200.0" translateX="5.0" visible="false">
                             <Label text="Multiplier" />
-                            <Slider fx:id="lfoSlider" max="10.0" maxWidth="140.0" min="1.0" translateX="5.0" translateY="2.0" value="2.0" />
-                            <TextField fx:id="lfoText" onAction="#_updateJitter" prefWidth="40.0" text="2"
+                            <Slider fx:id="lfoSlider" max="10.0" maxWidth="140.0" min="1.0" translateX="5.0" translateY="2.0" value="1.0" />
+                            <TextField fx:id="lfoText" onAction="#lfoTextOverride" prefWidth="40.0" text="1"
                                        translateX="5.0" translateY="-4.0"/>
                         </HBox>
                     </VBox>
@@ -97,6 +95,5 @@
                 </Button>
             </VBox>
         </HBox>
-      <Label text="CPS may fluctuate due to OS limitations." textFill="#d6d6d6" translateX="5.0" />
     </VBox>
 </GridPane>
