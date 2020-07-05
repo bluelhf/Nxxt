@@ -6,94 +6,93 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <?import java.lang.String?>
-<GridPane prefHeight="290.0" prefWidth="420.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.bluelhf.nxxt.Controller">
-    <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" />
-    </columnConstraints>
-    <rowConstraints>
-        <RowConstraints />
-        <RowConstraints minHeight="10.0" prefHeight="200.0" vgrow="SOMETIMES" />
-    </rowConstraints>
-    <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
-        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Nxxt Autoclicker" translateX="5.0">
-            <font>
-                <Font size="22.0" />
-            </font>
-        </Text>
-        <Text fx:id="version" strokeType="OUTSIDE" strokeWidth="0.0" translateX="10.0" />
-        <HBox>
-            <TitledPane fx:id="optionsPane" collapsible="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="223.0" prefWidth="259.0" text="Options">
-                <VBox>
-                    <HBox>
-                        <Label maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" text="Click Type" translateY="2.0" />
-                        <ChoiceBox fx:id="clickTypeBox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" translateX="5.0" value="Left">
-                            <items>
-                                <FXCollections fx:factory="observableArrayList">
-                                    <String fx:value="Left" />
-                                    <String fx:value="Right" />
-                                    <String fx:value="Middle" />
-                                </FXCollections>
-                            </items>
-                        </ChoiceBox>
-                    </HBox>
-                    <HBox translateY="2.0">
-                        <Label text="Click Delay" />
-                        <Slider fx:id="delaySlider" max="500.0" min="1.0" translateX="2.0" translateY="2.0" value="70" />
-                        <TextField fx:id="delayText" onAction="#delayTextOverride" prefWidth="40.0" text="70" translateX="4.0" translateY="-5.0" />
-                    </HBox>
-                    <Label fx:id="minCPS" text="Min. CPS: 000.00" textFill="#797979" translateY="-5.0">
-                        <font>
-                            <Font size="9.0" />
-                        </font>
-                    </Label>
-                    <Label fx:id="maxCPS" layoutX="20.0" layoutY="70.0" text="Max. CPS: 000.00" textFill="#797979" translateY="-5.0">
-                        <font>
-                            <Font size="9.0" />
-                        </font>
-                    </Label>
-                    <HBox prefHeight="100.0" prefWidth="200.0">
-                        <Button fx:id="changeKeybindButton" mnemonicParsing="false" onAction="#processKeybindChange"
-                                text="Change Keybind (NONE)">
-                            <HBox.margin>
-                                <Insets bottom="5.0"/>
-                            </HBox.margin>
-                        </Button>
-                    </HBox>
-                    <VBox>
-                        <CheckBox fx:id="jitterBox" mnemonicParsing="false" onAction="#_onJitterBox" text="Jitter"/>
-                        <HBox fx:id="jitterControl" prefHeight="100.0" prefWidth="200.0" translateX="5.0" visible="false">
-                            <Label text="Jitter Amount" />
-                            <Slider fx:id="jitterSlider" max="25.0" maxWidth="120.0" min="1.0" translateX="5.0" translateY="2.0" value="4.0" />
-                            <TextField fx:id="jitterText" onAction="#jitterTextOverride" prefWidth="40.0" text="4"
-                                       translateX="5.0" translateY="-4.0"/>
-                        </HBox>
-                    </VBox>
-                    <VBox layoutX="19.0" layoutY="128.0">
-                        <CheckBox fx:id="lfoBox" mnemonicParsing="false" onAction="#_onLFOBox" text="Delay LFO"/>
-                        <HBox fx:id="lfoControl" prefHeight="100.0" prefWidth="200.0" translateX="5.0" visible="false">
-                            <Label text="Multiplier" />
-                            <Slider fx:id="lfoSlider" max="10.0" maxWidth="140.0" min="1.0" translateX="5.0" translateY="2.0" value="1.0" />
-                            <TextField fx:id="lfoText" onAction="#lfoTextOverride" prefWidth="40.0" text="1"
-                                       translateX="5.0" translateY="-4.0"/>
-                        </HBox>
-                    </VBox>
-                </VBox>
-            </TitledPane>
-            <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
-                <padding>
-                    <Insets left="2.0" />
-                </padding>
-                <Button fx:id="startButton" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#turnOn" prefHeight="110.0" prefWidth="150.0" text="Start">
-                    <font>
-                        <Font name="Arial" size="30.0" />
-                    </font>
-                </Button>
-                <Button fx:id="stopButton" alignment="CENTER" disable="true" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#turnOff" prefHeight="110.0" prefWidth="150.0" text="Stop" translateY="4.0">
-                      <font>
-                        <Font name="Arial" size="30.0" />
-                    </font>
-                </Button>
-            </VBox>
-        </HBox>
-    </VBox>
-</GridPane>
+<Pane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/10.0.2-internal" fx:controller="io.github.bluelhf.nxxt.Controller">
+   <children>
+       <VBox fillWidth="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
+         <HBox alignment="BOTTOM_LEFT">
+            <children>
+               <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Nxxt Autoclicker">
+                  <font>
+                     <Font size="22.0" />
+                  </font>
+               </Text>
+               <Text fx:id="version" strokeType="OUTSIDE" strokeWidth="0.0" text="b0" />
+            </children>
+         </HBox>
+           <HBox alignment="TOP_CENTER">
+               <TitledPane fx:id="optionsPane" collapsible="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="223.0" prefWidth="259.0" text="Options">
+                   <VBox>
+                       <HBox>
+                           <Label maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" text="Click Type" translateY="2.0" />
+                           <ChoiceBox fx:id="clickTypeBox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" translateX="5.0" value="Left">
+                               <items>
+                                   <FXCollections fx:factory="observableArrayList">
+                                       <String fx:value="Left" />
+                                       <String fx:value="Right" />
+                                       <String fx:value="Middle" />
+                                   </FXCollections>
+                               </items>
+                           </ChoiceBox>
+                       </HBox>
+                       <HBox translateY="2.0">
+                           <Label text="Click Delay" />
+                           <Slider fx:id="delaySlider" max="500.0" min="1.0" translateX="2.0" translateY="2.0" value="70" />
+                           <TextField fx:id="delayText" prefWidth="40.0" text="70" translateX="4.0" translateY="-5.0" />
+                       </HBox>
+                       <Label fx:id="minCPS" text="Min. CPS: 000.00" textFill="#797979" translateY="-5.0">
+                           <font>
+                               <Font size="9.0" />
+                           </font>
+                       </Label>
+                       <Label fx:id="maxCPS" layoutX="20.0" layoutY="70.0" text="Max. CPS: 000.00" textFill="#797979" translateY="-5.0">
+                           <font>
+                               <Font size="9.0" />
+                           </font>
+                       </Label>
+                       <HBox prefHeight="100.0" prefWidth="200.0">
+                           <Button fx:id="changeKeybindButton" mnemonicParsing="false" onAction="#processKeybindChange" text="Change Keybind (NONE)">
+                               <HBox.margin>
+                                   <Insets bottom="5.0" />
+                               </HBox.margin>
+                           </Button>
+                       </HBox>
+                       <VBox>
+                           <CheckBox fx:id="jitterBox" mnemonicParsing="false" text="Jitter" />
+                           <HBox fx:id="jitterControl" prefHeight="100.0" prefWidth="200.0" translateX="5.0" visible="false">
+                               <Label text="Jitter Amount" />
+                               <Slider fx:id="jitterSlider" max="25.0" maxWidth="120.0" min="1.0" translateX="5.0" translateY="2.0" value="4.0" />
+                               <TextField fx:id="jitterText" prefWidth="40.0" text="4" translateX="5.0" translateY="-4.0" />
+                           </HBox>
+                       </VBox>
+                       <VBox layoutX="19.0" layoutY="128.0">
+                           <CheckBox fx:id="lfoBox" mnemonicParsing="false" text="Delay LFO" />
+                           <HBox fx:id="lfoControl" prefHeight="100.0" prefWidth="200.0" translateX="5.0" visible="false">
+                               <Label text="Multiplier" />
+                               <Slider fx:id="lfoSlider" max="10.0" maxWidth="140.0" min="1.0" translateX="5.0" translateY="2.0" value="1.0" />
+                               <TextField fx:id="lfoText" prefWidth="40.0" text="1" translateX="5.0" translateY="-4.0" />
+                           </HBox>
+                       </VBox>
+                   </VBox>
+               </TitledPane>
+               <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
+                   <padding>
+                       <Insets left="2.0" />
+                   </padding>
+                   <Button fx:id="startButton" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#turnOn" prefHeight="109.0" prefWidth="150.0" text="Start">
+                       <font>
+                           <Font name="Arial" size="30.0" />
+                       </font>
+                   </Button>
+                   <Button fx:id="stopButton" alignment="CENTER" disable="true" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#turnOff" prefHeight="109.0" prefWidth="150.0" text="Stop" translateY="4.0">
+                         <font>
+                           <Font name="Arial" size="30.0" />
+                       </font>
+                   </Button>
+               </VBox>
+           </HBox>
+         <padding>
+            <Insets bottom="4.0" left="4.0" right="4.0" />
+         </padding>
+       </VBox>
+   </children>
+</Pane>

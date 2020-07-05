@@ -29,6 +29,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.*;
@@ -87,13 +88,22 @@ public class Controller implements NativeKeyListener {
             clicker = new Clicker( mergeDelay, mergeJitter, mergeLFO);
             initJNI();
         } catch (NativeHookException | AWTException e) {
-            _fail(e);
+            fail(e);
         }
 
         // Make sure sliders edit our internal values
-        delaySlider.valueProperty().addListener((observableValue, oldValue, newValue) -> delaySliderOverride());
-        jitterSlider.valueProperty().addListener((observableValue, number, newValue) -> jitterSliderOverride());
-        lfoSlider.valueProperty().addListener((observableValue, number, newValue) -> lfoSliderOverride());
+        delaySlider.valueProperty().addListener((observableValue, oldValue, newValue) -> mergeDelay = sliderOverride(delaySlider, delayText));
+        jitterSlider.valueProperty().addListener((observableValue, number, newValue) -> mergeJitter = sliderOverride(jitterSlider, jitterText));
+        lfoSlider.valueProperty().addListener((observableValue, number, newValue) -> mergeLFO = sliderOverride(lfoSlider, lfoText));
+
+        // Make sure text fields edit our internal values
+        delayText.setOnAction(actionEvent -> mergeDelay = textOverride(delaySlider, delayText).orElseGet(() -> mergeDelay));
+        jitterText.setOnAction(actionEvent -> mergeJitter = textOverride(jitterSlider, jitterText).orElseGet(() -> mergeJitter));
+        lfoText.setOnAction(actionEvent -> mergeLFO = textOverride(lfoSlider, lfoText).orElseGet(() -> mergeLFO));
+
+        // Hide controls for Jitter & LFO if they aren't enabled
+        jitterBox.setOnAction(actionEvent -> jitterControl.setVisible(jitterBox.isSelected()));
+        lfoBox.setOnAction(actionEvent -> lfoControl.setVisible(lfoBox.isSelected()));
 
         // Read properties file to get the project version
         Properties properties = new Properties();
@@ -106,6 +116,45 @@ public class Controller implements NativeKeyListener {
         this.version.setText(properties.getProperty("version"));
         ticker.scheduleAtFixedRate(new TimerTask() {@Override public void run() { tick(); }}, 0, 100);
     }
+
+    // These just handle overriding sliders with text or text with sliders
+    private OptionalDouble textOverride(Slider slider, TextField text) {
+        String textField = text.getText();
+        double result;
+        try {
+            result = Double.parseDouble(textField);
+        } catch (NumberFormatException | NullPointerException e) {
+            (new Thread(() -> {
+                for (int i = 0; i < 3; i++) {
+                    Platform.runLater(() -> text.setStyle("-fx-border-color: red; -fx-border-width: 2px;"));
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException interruptedException) {
+                        Platform.runLater(() -> fail(interruptedException));
+                    }
+
+                    Platform.runLater(() -> text.setStyle("-fx-border-width: 0px;"));
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException interruptedException) {
+                        Platform.runLater(() -> fail(interruptedException));
+                    }
+                }
+
+            })).start();
+            return OptionalDouble.empty();
+
+        }
+        text.setText(String.valueOf(result));
+        slider.setValue(result);
+        return OptionalDouble.of(result);
+    }
+
+    private double sliderOverride(Slider slider, TextField text) {
+        text.setText(String.valueOf((int) slider.getValue()));
+        return slider.getValue();
+    }
+
 
     // Method to shut down properly - very important, actually!
     public void shutdown() {
@@ -211,31 +260,6 @@ public class Controller implements NativeKeyListener {
         });
     }
 
-    // These methods are called by FXML or by our sliders' chaneg listeners to decide how to merge everything
-    @FXML private void delayTextOverride() {
-        mergeDelay = textOverride(delaySlider, delayText);
-    }
-
-    @FXML private void delaySliderOverride() {
-        mergeDelay = sliderOverride(delaySlider, delayText);
-    }
-
-    @FXML private void jitterTextOverride() {
-        mergeJitter = textOverride(jitterSlider, jitterText);
-    }
-
-    @FXML private void jitterSliderOverride() {
-        mergeJitter = sliderOverride(jitterSlider, jitterText);
-    }
-
-    @FXML private void lfoTextOverride() {
-        mergeLFO = textOverride(lfoSlider, lfoText);
-    }
-
-    @FXML private void lfoSliderOverride() {
-        mergeLFO = sliderOverride(lfoSlider, lfoText);
-    }
-
     private int getModifiers(KeyEvent ev) {
         if (ev == null) return 0;
         int value = 0;
@@ -246,25 +270,9 @@ public class Controller implements NativeKeyListener {
         return value;
     }
 
-    // These just handle overriding sliders with text or text with sliders
-    private double textOverride(Slider slider, TextField text) {
-        String textField = text.getText();
-        String stripped = Arrays.stream(textField.split("")).filter(s -> s.matches("[0-9]")).collect(Collectors.joining());
-        text.setText(stripped);
-        slider.setValue(Integer.parseInt(stripped));
-        return slider.getValue();
-    }
-
-    public void nativeKeyReleased(NativeKeyEvent ev) {
-    }
-
-    public void nativeKeyTyped(NativeKeyEvent ev) {
-    }
-
-    private double sliderOverride(Slider slider, TextField text) {
-        text.setText(String.valueOf((int) slider.getValue()));
-        return slider.getValue();
-    }
+    // We need these if we want to implement NativeKeyListener - they're not actually used
+    public void nativeKeyReleased(NativeKeyEvent ev) { }
+    public void nativeKeyTyped(NativeKeyEvent ev) { }
 
     private boolean isMac() {
         return System.getProperty("os.name").toLowerCase().contains("mac");
@@ -304,7 +312,7 @@ public class Controller implements NativeKeyListener {
             Runtime.getRuntime().exit(0);
         }
         if (modifiers.equals("Ctrl") && ev.getKeyCode() == 3667) {
-            Platform.runLater(() -> _fail(new Exception("Ctrl + Delete force-kill")));
+            Platform.runLater(() -> fail(new Exception("Ctrl + Delete force-kill")));
         }
 
         int evModifiers = ev.getModifiers();
@@ -366,7 +374,7 @@ public class Controller implements NativeKeyListener {
         }
     }
 
-    protected void _fail(Exception e) {
+    protected void fail(Exception e) {
         shutdown();
         Parent root = null;
         try {
@@ -401,7 +409,7 @@ public class Controller implements NativeKeyListener {
                 Platform.runLater(() -> errorDialog.getScene().getWindow().sizeToScene());
             });
 
-        } catch (NoSuchFieldException | IllegalAccessException exc) {
+        } catch (NoSuchFieldException | IllegalAccessException | InaccessibleObjectException exc) {
             exc.printStackTrace();
         }
 
@@ -423,13 +431,5 @@ public class Controller implements NativeKeyListener {
 
         Platform.runLater(() -> this.stage.hide());
 
-    }
-
-    @FXML private void _onJitterBox() {
-        jitterControl.setVisible(jitterBox.isSelected());
-    }
-
-    @FXML private void _onLFOBox() {
-        lfoControl.setVisible(lfoBox.isSelected());
     }
 }
