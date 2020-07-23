@@ -8,7 +8,7 @@ which will take time..
 
 This is how it'll look!
 
-![Cool new UI!](https://imgur.com/UyO5wbm.png)
+![Cool new UI!](https://imgur.com/ogfmNKf.png)
 
 ## Building Nxxt
 If you want to get a probably-not-working-but-maybe-has-cool-things version of Nxxt, you can
