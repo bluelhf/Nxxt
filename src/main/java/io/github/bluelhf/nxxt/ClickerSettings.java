@@ -65,8 +65,8 @@ public class ClickerSettings {
 
     public enum ClickType {
         LEFT(InputEvent.BUTTON1_DOWN_MASK),
-        RIGHT(InputEvent.BUTTON2_DOWN_MASK),
-        MIDDLE(InputEvent.BUTTON3_DOWN_MASK);
+        RIGHT(InputEvent.BUTTON3_DOWN_MASK),
+        MIDDLE(InputEvent.BUTTON2_DOWN_MASK);
 
         int mask;
         ClickType(int mask) {

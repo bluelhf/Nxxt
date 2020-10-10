@@ -70,18 +70,6 @@ public class Controller implements NativeKeyListener {
     @FXML Button stopButton;
     @FXML TitledPane optionsPane;
     @FXML Button changeKeybindButton;
-
-        private void darken() {
-            ColorInput color = new ColorInput();
-            color.setPaint(Color.WHITE);
-            color.setWidth(Double.MAX_VALUE);
-            color.setHeight(Double.MAX_VALUE);
-            Blend blend = new Blend(BlendMode.DIFFERENCE);
-            blend.setBottomInput(color);
-
-            stage.getScene().getRoot().setEffect(blend);
-        }
-
     @FXML DialogPane errorDialog;
     @FXML Label exception;
     @FXML Text exception_st;
@@ -97,6 +85,17 @@ public class Controller implements NativeKeyListener {
     private double mergeDelay = 69;
     private double mergeLFO = 1;
     private double mergeJitter = 4;
+
+    private void darken() {
+        ColorInput color = new ColorInput();
+        color.setPaint(Color.WHITE);
+        color.setWidth(Double.MAX_VALUE);
+        color.setHeight(Double.MAX_VALUE);
+        Blend blend = new Blend(BlendMode.DIFFERENCE);
+        blend.setBottomInput(color);
+
+        stage.getScene().getRoot().setEffect(blend);
+    }
 
     public void postInit() {
 
@@ -121,7 +120,7 @@ public class Controller implements NativeKeyListener {
     public void initialise(Stage stage) {
         this.stage = stage;
         try {
-            clicker = new Clicker( mergeDelay, mergeJitter, mergeLFO);
+            clicker = new Clicker(mergeDelay, mergeJitter, mergeLFO);
             initJNI();
         } catch (NativeHookException | AWTException e) {
             fail(e);
@@ -157,7 +156,12 @@ public class Controller implements NativeKeyListener {
             Nxxt.getLogger().severe("Failed to read properties!");
         }
         this.version.setText(properties.getProperty("version"));
-        ticker.scheduleAtFixedRate(new TimerTask() {@Override public void run() { tick(); }}, 0, 100);
+        ticker.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                tick();
+            }
+        }, 0, 100);
     }
 
     private void tick() {
@@ -169,10 +173,11 @@ public class Controller implements NativeKeyListener {
             lfoSlider.setValue(mergeLFO);
 
             // Update our Clicker object with the merged values
-            clicker.getSettings().setClickType(clickerType());
-            clicker.getSettings().setLFO(lfoBox.isSelected() ? mergeLFO : -1);
-            clicker.getSettings().setDelay(mergeDelay);
-            clicker.getSettings().setJitter(jitterBox.isSelected() ? mergeJitter : -1);
+            clicker.getSettings()
+                .setClickType(clickerType())
+                .setLFO(lfoBox.isSelected() ? mergeLFO : -1)
+                .setDelay(mergeDelay)
+                .setJitter(jitterBox.isSelected() ? mergeJitter : -1);
 
             // Update keybind reset button
             resetKeybindButton.setVisible(keybindEvent != null);
@@ -338,7 +343,8 @@ public class Controller implements NativeKeyListener {
     }
 
     public void toggle() {
-        if (clicker.isEnabled()) turnOff(); else turnOn();
+        if (clicker.isEnabled()) turnOff();
+        else turnOn();
     }
 
     private String keyEventText(NativeKeyEvent event) {
@@ -357,8 +363,11 @@ public class Controller implements NativeKeyListener {
     }
 
     // We need these if we want to implement NativeKeyListener - they're not actually used
-    public void nativeKeyReleased(NativeKeyEvent ev) { }
-    public void nativeKeyTyped(NativeKeyEvent ev) { }
+    public void nativeKeyReleased(NativeKeyEvent ev) {
+    }
+
+    public void nativeKeyTyped(NativeKeyEvent ev) {
+    }
 
     private boolean isMac() {
         return System.getProperty("os.name").toLowerCase().contains("mac");
@@ -407,14 +416,16 @@ public class Controller implements NativeKeyListener {
         }
     }
 
-    @FXML private void processKeybindReset(ActionEvent event) {
+    @FXML
+    private void processKeybindReset(ActionEvent event) {
         keybindEvent = null;
         changeKeybindButton.setText("Change Keybind (NONE)");
         resetKeybindButton.setVisible(false);
     }
 
     @SuppressWarnings("unused")
-    @FXML private void processKeybindChange(ActionEvent event) {
+    @FXML
+    private void processKeybindChange(ActionEvent event) {
         changeKeybindButton.setDisable(true);
         Parent root;
         try {
@@ -492,7 +503,9 @@ public class Controller implements NativeKeyListener {
     }
 
     // records relative x and y co-ordinates.
-    class Delta { double x, y; }
+    class Delta {
+        double x, y;
+    }
 
     class WindowButtons extends HBox {
         public WindowButtons() {
