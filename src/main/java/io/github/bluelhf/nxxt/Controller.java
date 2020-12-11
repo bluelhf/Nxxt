@@ -1,10 +1,10 @@
 package io.github.bluelhf.nxxt;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -19,13 +19,14 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
-import org.jnativehook.NativeInputEvent;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
@@ -35,6 +36,8 @@ import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.LockSupport;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -74,31 +77,63 @@ public class Controller implements NativeKeyListener {
     @FXML Label exception;
     @FXML Text exception_st;
 
+    private final int[] konami = {57416, 57416, 57424, 57424, 57419, 57421, 57419, 57421, 48, 30};
+
     KeyEvent keybindEvent = null;
     Stage stage;
 
     Clicker clicker;
     Timer ticker = new Timer();
-    // Yay.
-    int[] konami = {57416, 57416, 57424, 57424, 57419, 57421, 57419, 57421, 48, 30};
-    int idx = 0;
-    private double mergeDelay = 69;
-    private double mergeLFO = 1;
-    private double mergeJitter = 4;
+    private final int[] pcmr = {25, 46, 50, 19};
+    @FXML Button themeToggle;
+    private int pcmrIndex = 0;
+    private int konamiIndex = 0;
 
-    private void darken() {
-        ColorInput color = new ColorInput();
-        color.setPaint(Color.WHITE);
-        color.setWidth(Double.MAX_VALUE);
-        color.setHeight(Double.MAX_VALUE);
-        Blend blend = new Blend(BlendMode.DIFFERENCE);
-        blend.setBottomInput(color);
+    private boolean rgb = false;
+    private Media song;
+    private MediaPlayer player;
 
-        stage.getScene().getRoot().setEffect(blend);
+    // Assign default values
+    private double modelDelay  = 69;
+    private double modelLFO    = 1;
+    private double modelJitter = 4;
+
+    private boolean toggleLock = false;
+    private void setDark(boolean isDark) {
+        int to = isDark ? 1 : 0;
+
+        double delta = 0.01;
+
+        AtomicDouble value = new AtomicDouble(Math.abs(to - 1));
+        CompletableFuture.runAsync(() -> {
+            toggleLock = true;
+            themeToggle.setDisable(true);
+            while (Math.abs(value.get() - to) > delta) {
+                ColorInput color = new ColorInput();
+                color.setPaint(Color.gray(value.getAndAdd(to > value.get() ? delta : -delta)));
+                color.setWidth(Double.MAX_VALUE);
+                color.setHeight(Double.MAX_VALUE);
+                Blend blend = new Blend(BlendMode.DIFFERENCE);
+                blend.setBottomInput(color);
+
+                Platform.runLater(() -> stage.getScene().getRoot().setEffect(blend));
+                LockSupport.parkNanos(1000000);
+            }
+        }).thenRun(() -> {
+            toggleLock = false;
+            themeToggle.setDisable(false);
+            if (value.get() <= delta) stage.getScene().getRoot().setEffect(null);
+        });
+    }
+
+    @FXML
+    private void toggleTheme() {
+        if (toggleLock) return;
+        setDark(stage.getScene().getRoot().getEffect() == null);
+        themeToggle.setText(stage.getScene().getRoot().getEffect() == null ? "☽" : "☀");
     }
 
     public void postInit() {
-
         BorderPane pane = (BorderPane) stage.getScene().getRoot();
         pane.getTop().setOnMousePressed(mouseEvent -> {
             dragDelta.x = stage.getX() - mouseEvent.getScreenX();
@@ -110,17 +145,13 @@ public class Controller implements NativeKeyListener {
         });
 
         stage.initStyle(StageStyle.TRANSPARENT);
-        stage.getScene().setFill(Color.TRANSPARENT);
-        darken();
-
-
     }
 
     // Called by the Launcher class - sets everything up.
     public void initialise(Stage stage) {
         this.stage = stage;
         try {
-            clicker = new Clicker(mergeDelay, mergeJitter, mergeLFO);
+            clicker = new Clicker(modelDelay, modelJitter, modelLFO);
             initJNI();
         } catch (NativeHookException | AWTException e) {
             fail(e);
@@ -134,18 +165,27 @@ public class Controller implements NativeKeyListener {
         minimiseButton.setOnAction(eventAction -> stage.setIconified(true));
 
         // Make sure sliders edit our internal values
-        delaySlider.valueProperty().addListener((observableValue, oldValue, newValue) -> mergeDelay = sliderOverride(delaySlider, delayText));
-        jitterSlider.valueProperty().addListener((observableValue, number, newValue) -> mergeJitter = sliderOverride(jitterSlider, jitterText));
-        lfoSlider.valueProperty().addListener((observableValue, number, newValue) -> mergeLFO = sliderOverride(lfoSlider, lfoText));
+        delaySlider.valueProperty().addListener((observableValue, oldValue, newValue) -> modelDelay = sliderOverride(delaySlider, delayText));
+        jitterSlider.valueProperty().addListener((observableValue, number, newValue) -> modelJitter = sliderOverride(jitterSlider, jitterText));
+        lfoSlider.valueProperty().addListener((observableValue, number, newValue) -> modelLFO = sliderOverride(lfoSlider, lfoText));
 
         // Make sure text fields edit our internal values
-        delayText.setOnAction(actionEvent -> mergeDelay = textOverride(delaySlider, delayText).orElseGet(() -> mergeDelay));
-        jitterText.setOnAction(actionEvent -> mergeJitter = textOverride(jitterSlider, jitterText).orElseGet(() -> mergeJitter));
-        lfoText.setOnAction(actionEvent -> mergeLFO = textOverride(lfoSlider, lfoText).orElseGet(() -> mergeLFO));
+        delayText.setOnAction(actionEvent -> modelDelay = textOverride(delaySlider, delayText).orElseGet(() -> modelDelay));
+        jitterText.setOnAction(actionEvent -> modelJitter = textOverride(jitterSlider, jitterText).orElseGet(() -> modelJitter));
+        lfoText.setOnAction(actionEvent -> modelLFO = textOverride(lfoSlider, lfoText).orElseGet(() -> modelLFO));
 
         // Hide controls for Jitter & LFO if they aren't enabled
         jitterBox.setOnAction(actionEvent -> jitterControl.setVisible(jitterBox.isSelected()));
         lfoBox.setOnAction(actionEvent -> lfoControl.setVisible(lfoBox.isSelected()));
+
+        delayText.setText("" + (int)modelDelay);
+        delaySlider.setValue(modelDelay);
+        lfoText.setText("" + (int)modelLFO);
+        lfoSlider.setValue(modelLFO);
+        jitterText.setText("" + (int)modelJitter);
+        jitterSlider.setValue(modelJitter);
+
+        resetKeybindButton.setVisible(keybindEvent != null);
 
         // Read properties file to get the project version
         Properties properties = new Properties();
@@ -161,37 +201,37 @@ public class Controller implements NativeKeyListener {
             public void run() {
                 tick();
             }
-        }, 0, 100);
+        }, 0, 50);
     }
 
     private void tick() {
         Platform.runLater(() -> {
 
             // Update sliders from merged values
-            delaySlider.setValue(mergeDelay);
-            jitterSlider.setValue(mergeJitter);
-            lfoSlider.setValue(mergeLFO);
+            delaySlider.setValue(modelDelay);
+            jitterSlider.setValue(modelJitter);
+            lfoSlider.setValue(modelLFO);
+
+            String col = Color.hsb((System.currentTimeMillis() % 1000) / 1000D * 360, 1, 1).toString().replaceFirst("0x", "#");
+            stage.getScene().getRoot().setStyle("-fx-border-color: " + (rgb ? col : "#00000000"));
 
             // Update our Clicker object with the merged values
             clicker.getSettings()
                 .setClickType(clickerType())
-                .setLFO(lfoBox.isSelected() ? mergeLFO : -1)
-                .setDelay(mergeDelay)
-                .setJitter(jitterBox.isSelected() ? mergeJitter : -1);
-
-            // Update keybind reset button
-            resetKeybindButton.setVisible(keybindEvent != null);
+                .setLFO(lfoBox.isSelected() ? modelLFO : -1)
+                .setDelay(modelDelay)
+                .setJitter(jitterBox.isSelected() ? modelJitter : -1);
 
             // Update our CPS
-            if (mergeDelay > clicker.calcMinSlice().getNow(-1)) {
+            if (modelDelay > clicker.calcMinSlice().getNow(-1)) {
                 lfoBox.setVisible(true);
                 lfoControl.getChildren().forEach(node -> node.setVisible(lfoBox.isSelected()));
                 DecimalFormat df = new DecimalFormat("###0.##");
-                double minDelay = 1000.0D / (mergeDelay);
-                double maxDelay = 1000.0D / (mergeDelay);
+                double minDelay = 1000.0D / (modelDelay);
+                double maxDelay = 1000.0D / (modelDelay);
                 if (lfoBox.isSelected()) {
-                    minDelay -= mergeLFO;
-                    maxDelay += mergeLFO;
+                    minDelay -= modelLFO;
+                    maxDelay += modelLFO;
 
                     minDelay = Math.max(0.0D, minDelay);
                     minCPS.setText("Min. CPS: " + df.format(minDelay));
@@ -352,16 +392,6 @@ public class Controller implements NativeKeyListener {
         return keyEventText(event.getKeyCode(), NativeKeyEvent.getKeyText(event.getKeyCode()), (m & 136) != 0, (m & 17) != 0, (m & 34) != 0 || (m & 68) != 0);
     }
 
-    private int getModifiers(KeyEvent ev) {
-        if (ev == null) return 0;
-        int value = 0;
-        if (ev.isAltDown()) value |= NativeInputEvent.ALT_MASK;
-        if (ev.isControlDown()) value |= NativeInputEvent.CTRL_MASK;
-        if (ev.isMetaDown()) value |= NativeInputEvent.META_MASK;
-        if (ev.isShiftDown()) value |= NativeInputEvent.SHIFT_MASK;
-        return value;
-    }
-
     // We need these if we want to implement NativeKeyListener - they're not actually used
     public void nativeKeyReleased(NativeKeyEvent ev) {
     }
@@ -394,7 +424,7 @@ public class Controller implements NativeKeyListener {
         }
 
 
-        if (ev.getKeyCode() == this.konami[this.idx] && this.idx == this.konami.length - 1) {
+        if (ev.getKeyCode() == this.konami[this.konamiIndex] && this.konamiIndex == this.konami.length - 1) {
             Platform.runLater(() -> {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Hello!");
@@ -407,12 +437,38 @@ public class Controller implements NativeKeyListener {
                 alert.setContentText("© Suhoset");
                 alert.show();
             });
-            this.idx = 0;
-        } else if (ev.getKeyCode() == this.konami[this.idx]) {
-            this.idx++;
-            this.idx %= this.konami.length;
+            this.konamiIndex = 0;
+        } else if (ev.getKeyCode() == this.konami[this.konamiIndex]) {
+            this.konamiIndex++;
+            this.konamiIndex %= this.konami.length;
         } else {
-            this.idx = 0;
+            this.konamiIndex = 0;
+        }
+
+        if (ev.getKeyCode() == this.pcmr[this.pcmrIndex] && this.pcmrIndex == this.pcmr.length - 1) {
+            rgb = !rgb;
+            if (!toggleLock) {
+                setDark(rgb);
+            }
+            if (rgb) {
+                try {
+                    Platform.runLater(() -> {
+                        if (song == null) song = new Media(Nxxt.class.getResource("/song.mp3").toString());
+                        if (player == null) player = new MediaPlayer(song);
+                        player.setOnError(() -> System.out.println("Error : " + player.getError().toString()));
+                        player.play();
+                    });
+
+                } catch (Exception e) {
+                    Platform.runLater(() -> fail(e));
+                }
+            } else if (player != null) player.stop();
+            this.pcmrIndex = 0;
+        } else if (ev.getKeyCode() == this.pcmr[this.pcmrIndex]) {
+            this.pcmrIndex++;
+            this.pcmrIndex %= this.pcmr.length;
+        } else {
+            this.pcmrIndex = 0;
         }
     }
 
@@ -503,20 +559,7 @@ public class Controller implements NativeKeyListener {
     }
 
     // records relative x and y co-ordinates.
-    class Delta {
+    static class Delta {
         double x, y;
-    }
-
-    class WindowButtons extends HBox {
-        public WindowButtons() {
-            this.setAlignment(Pos.CENTER_RIGHT);
-            Button closeButton = new Button("\uD83D\uDDD9");
-            closeButton.setOnAction(actionEvent -> {
-                shutdown();
-                Platform.exit();
-            });
-
-            this.getChildren().add(closeButton);
-        }
     }
 }
