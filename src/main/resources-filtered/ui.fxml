@@ -1,24 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.collections.FXCollections?>
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <?import java.lang.String?>
-<Pane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/10.0.2-internal" fx:controller="io.github.bluelhf.nxxt.Controller">
-   <children>
-       <VBox fillWidth="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
-         <HBox alignment="BOTTOM_LEFT">
-            <children>
-               <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Nxxt Autoclicker">
-                  <font>
-                     <Font size="22.0" />
-                  </font>
-               </Text>
-               <Text fx:id="version" strokeType="OUTSIDE" strokeWidth="0.0" text="b0" />
-            </children>
-         </HBox>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" prefHeight="200.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/11.0.1" fx:controller="blue.lhf.nxxt.Controller">
+   <left>
+       <VBox fillWidth="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" BorderPane.alignment="CENTER">
            <HBox alignment="TOP_CENTER">
                <TitledPane fx:id="optionsPane" collapsible="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="223.0" prefWidth="259.0" text="Options">
                    <VBox>
@@ -49,12 +39,20 @@
                                <Font size="9.0" />
                            </font>
                        </Label>
-                       <HBox prefHeight="100.0" prefWidth="200.0">
+                       <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
                            <Button fx:id="changeKeybindButton" mnemonicParsing="false" onAction="#processKeybindChange" text="Change Keybind (NONE)">
                                <HBox.margin>
-                                   <Insets bottom="5.0" />
+                                   <Insets />
                                </HBox.margin>
                            </Button>
+                     <Button fx:id="resetKeybindButton" mnemonicParsing="false" onAction="#processKeybindReset" text="Reset" translateX="3.0">
+                        <font>
+                           <Font size="9.0" />
+                        </font>
+                     </Button>
+                     <VBox.margin>
+                        <Insets bottom="5.0" />
+                     </VBox.margin>
                        </HBox>
                        <VBox>
                            <CheckBox fx:id="jitterBox" mnemonicParsing="false" text="Jitter" />
@@ -94,5 +92,38 @@
             <Insets bottom="4.0" left="4.0" right="4.0" />
          </padding>
        </VBox>
-   </children>
-</Pane>
+   </left>
+   <top>
+      <HBox alignment="BOTTOM_LEFT" spacing="3.0">
+         <children>
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Nxxt Autoclicker" wrappingWidth="162.189453125">
+               <font>
+                  <Font size="22.0" />
+               </font>
+            </Text>
+            <Text fx:id="version" strokeType="OUTSIDE" strokeWidth="0.0" text="b0" />
+            <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" prefHeight="30.0" prefWidth="1000" spacing="3.0">
+               <children>
+                  <Button fx:id="themeToggle" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#toggleTheme" pickOnBounds="false" prefHeight="26.0" prefWidth="36.0" text="☽" textOverrun="CLIP" wrapText="true">
+                     <font>
+                        <Font name="Arial Bold" size="15.0" />
+                     </font>
+                  </Button>
+                <Button fx:id="minimiseButton" alignment="CENTER" contentDisplay="TEXT_ONLY" ellipsisString="" graphicTextGap="0.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="26.0" prefWidth="26.0" text="‒" textAlignment="CENTER" textOverrun="CLIP">
+                     <font>
+                        <Font name="System Bold" size="12.0" />
+                     </font>
+                  </Button>
+                  <Button fx:id="closeButton" alignment="CENTER" contentDisplay="TEXT_ONLY" ellipsisString="" graphicTextGap="0.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="26.0" prefWidth="42.0" text="🗙" textAlignment="CENTER" textOverrun="CLIP" />
+               </children>
+               <HBox.margin>
+                  <Insets />
+               </HBox.margin>
+            </HBox>
+         </children>
+         <BorderPane.margin>
+            <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+         </BorderPane.margin>
+      </HBox>
+   </top>
+</BorderPane>

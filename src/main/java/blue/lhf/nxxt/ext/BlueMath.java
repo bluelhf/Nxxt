@@ -1,4 +1,4 @@
-package io.github.bluelhf.nxxt.ext;
+package blue.lhf.nxxt.ext;
 
 import com.google.inject.internal.Nullable;
 

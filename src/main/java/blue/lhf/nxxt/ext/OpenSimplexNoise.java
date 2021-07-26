@@ -1,4 +1,4 @@
-package io.github.bluelhf.nxxt.ext;
+package blue.lhf.nxxt.ext;
 
 /*
  * OpenSimplex Noise in Java.
@@ -16,6 +16,7 @@ package io.github.bluelhf.nxxt.ext;
  *   will be the same when ported to other languages.
  */
 
+@SuppressWarnings({"unused", "PointlessArithmeticExpression", "UnnecessaryLocalVariable", "UnusedAssignment", "DuplicatedCode", "SpellCheckingInspection"})
 public class OpenSimplexNoise {
 
     private static final double STRETCH_CONSTANT_2D = -0.211324865405187;    //(1/Math.sqrt(2+1)-1)/2;
@@ -32,7 +33,7 @@ public class OpenSimplexNoise {
     private static final long DEFAULT_SEED = 0;
     //Gradients for 2D. They approximate the directions to the
     //vertices of an octagon from the center.
-    private static byte[] gradients2D = new byte[]{
+    private static final byte[] gradients2D = new byte[]{
             5, 2, 2, 5,
             -5, 2, -2, 5,
             5, -2, 2, -5,
@@ -42,7 +43,7 @@ public class OpenSimplexNoise {
     //vertices of a rhombicuboctahedron from the center, skewed so
     //that the triangular and square facets can be inscribed inside
     //circles of the same radius.
-    private static byte[] gradients3D = new byte[]{
+    private static final byte[] gradients3D = new byte[]{
             -11, 4, 4, -4, 11, 4, -4, 4, 11,
             11, 4, 4, 4, 11, 4, 4, 4, 11,
             -11, -4, 4, -4, -11, 4, -4, -4, 11,
@@ -56,7 +57,7 @@ public class OpenSimplexNoise {
     //vertices of a disprismatotesseractihexadecachoron from the center,
     //skewed so that the tetrahedral and cubic facets can be inscribed inside
     //spheres of the same radius.
-    private static byte[] gradients4D = new byte[]{
+    private static final byte[] gradients4D = new byte[]{
             3, 1, 1, 1, 1, 3, 1, 1, 1, 1, 3, 1, 1, 1, 1, 3,
             -3, 1, 1, 1, -1, 3, 1, 1, -1, 1, 3, 1, -1, 1, 1, 3,
             3, -1, 1, 1, 1, -3, 1, 1, 1, -1, 3, 1, 1, -1, 1, 3,
@@ -74,8 +75,8 @@ public class OpenSimplexNoise {
             3, -1, -1, -1, 1, -3, -1, -1, 1, -1, -3, -1, 1, -1, -1, -3,
             -3, -1, -1, -1, -1, -3, -1, -1, -1, -1, -3, -1, -1, -1, -1, -3,
     };
-    private short[] perm;
-    private short[] permGradIndex3D;
+    private final short[] perm;
+    private final short[] permGradIndex3D;
 
     public OpenSimplexNoise() {
         this(DEFAULT_SEED);
@@ -100,11 +101,11 @@ public class OpenSimplexNoise {
         short[] source = new short[256];
         for (short i = 0; i < 256; i++)
             source[i] = i;
-        seed = seed * 6364136223846793005l + 1442695040888963407l;
-        seed = seed * 6364136223846793005l + 1442695040888963407l;
-        seed = seed * 6364136223846793005l + 1442695040888963407l;
+        seed = seed * 6364136223846793005L + 1442695040888963407L;
+        seed = seed * 6364136223846793005L + 1442695040888963407L;
+        seed = seed * 6364136223846793005L + 1442695040888963407L;
         for (int i = 255; i >= 0; i--) {
-            seed = seed * 6364136223846793005l + 1442695040888963407l;
+            seed = seed * 6364136223846793005L + 1442695040888963407L;
             int r = (int) ((seed + 31) % (i + 1));
             if (r < 0)
                 r += (i + 1);
@@ -794,6 +795,7 @@ public class OpenSimplexNoise {
     }
 
     //4D OpenSimplex Noise.
+    @SuppressWarnings("ConstantConditions")
     public double eval(double x, double y, double z, double w) {
 
         //Place input coordinates on simplectic honeycomb.

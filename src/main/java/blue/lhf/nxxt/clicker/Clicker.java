@@ -1,19 +1,20 @@
-package io.github.bluelhf.nxxt;
+package blue.lhf.nxxt.clicker;
 
-import io.github.bluelhf.nxxt.ext.BlueMath;
+import blue.lhf.nxxt.ext.BlueMath;
 
 import java.awt.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.LockSupport;
 
 public class Clicker {
-    private Robot robot;
+    private final Robot robot;
     private int minTimeslice = -1;
     private boolean enabled = false;
 
-    private ClickerSettings settings;
-    private BlueMath.Random blueRandom;
+    private final ClickerSettings settings;
+    private final BlueMath.Random blueRandom;
 
-    Clicker(double delay, double jitter, double lfo) throws AWTException {
+    public Clicker(double delay, double jitter, double lfo) throws AWTException {
         settings = new ClickerSettings(delay, lfo, jitter, ClickerSettings.ClickType.LEFT);
         blueRandom = new BlueMath.Random();
         robot = new Robot();
@@ -49,9 +50,7 @@ public class Clicker {
                 }
 
                 if (settings.getDelay() > minTimeslice)
-                    try {
-                        Thread.sleep((long) delay);
-                    } catch (Exception ignored) { }
+                    LockSupport.parkNanos((long) (1E6 * delay));
             }
         })).start();
 
@@ -61,6 +60,7 @@ public class Clicker {
         enabled = false;
     }
 
+    @SuppressWarnings("unused")
     public void toggle() {
         if (!enabled) start(); else stop();
     }

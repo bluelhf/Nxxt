@@ -1,4 +1,4 @@
-package io.github.bluelhf.nxxt;
+package blue.lhf.nxxt;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -38,9 +38,9 @@ public class Launcher extends Application {
         controller.initialise(stage);
         stage.setScene(scene);
         stage.getIcons().add(new Image("/logo.png"));
-        stage.setResizable(false);
 
         stage.setTitle("Nxxt Autoclicker " + properties.getProperty("version"));
+        controller.postInit();
         stage.show();
     }
 
