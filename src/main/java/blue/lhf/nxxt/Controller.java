@@ -1,6 +1,10 @@
-package io.github.bluelhf.nxxt;
+package blue.lhf.nxxt;
 
-import com.google.common.util.concurrent.AtomicDouble;
+import io.github.bluelhf.dapper.DapperPlayer;
+import blue.lhf.nxxt.clicker.Clicker;
+import blue.lhf.nxxt.clicker.ClickerSettings;
+import blue.lhf.nxxt.del.Janitor;
+import blue.lhf.nxxt.ext.$;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -14,17 +18,15 @@ import javafx.scene.control.*;
 import javafx.scene.effect.Blend;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.effect.ColorInput;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javazoom.jl.player.JavaSoundAudioDevice;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 import org.jnativehook.keyboard.NativeKeyEvent;
@@ -33,6 +35,8 @@ import org.jnativehook.keyboard.NativeKeyListener;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.*;
@@ -77,21 +81,17 @@ public class Controller implements NativeKeyListener {
     @FXML Label exception;
     @FXML Text exception_st;
 
-    private final int[] konami = {57416, 57416, 57424, 57424, 57419, 57421, 57419, 57421, 48, 30};
-
     KeyEvent keybindEvent = null;
     Stage stage;
 
     Clicker clicker;
     Timer ticker = new Timer();
-    private final int[] pcmr = {25, 46, 50, 19};
+    private final int[] NdJtWrhhzEQZkRMa = {25, 46, 50, 19};
     @FXML Button themeToggle;
-    private int pcmrIndex = 0;
-    private int konamiIndex = 0;
+    private int YcpYnOJpQVLNYXBiindex = 0;
 
-    private boolean rgb = false;
-    private Media song;
-    private MediaPlayer player;
+    private boolean DyRMGhJEpzdLMWEa = false;
+    $ v$ = null;
 
     // Assign default values
     private double modelDelay  = 69;
@@ -99,38 +99,65 @@ public class Controller implements NativeKeyListener {
     private double modelJitter = 4;
 
     private boolean toggleLock = false;
-    private void setDark(boolean isDark) {
-        int to = isDark ? 1 : 0;
+    private boolean dark = false;
+    private boolean wasDark;
+    private InputStream radioStream;
 
-        double delta = 0.01;
+    private CompletableFuture<Void> setDark(boolean toDark) {
+        return setDark(stage.getScene(), toDark);
+    }
 
-        AtomicDouble value = new AtomicDouble(Math.abs(to - 1));
-        CompletableFuture.runAsync(() -> {
-            toggleLock = true;
-            themeToggle.setDisable(true);
-            while (Math.abs(value.get() - to) > delta) {
-                ColorInput color = new ColorInput();
-                color.setPaint(Color.gray(value.getAndAdd(to > value.get() ? delta : -delta)));
-                color.setWidth(Double.MAX_VALUE);
-                color.setHeight(Double.MAX_VALUE);
-                Blend blend = new Blend(BlendMode.DIFFERENCE);
-                blend.setBottomInput(color);
+    private CompletableFuture<Void> setDark(Scene scene, boolean toDark) {
+        if (!Platform.isFxApplicationThread()) {
+            CompletableFuture<Void> incomplete = new CompletableFuture<>();
+            Platform.runLater(() -> setDark(scene, toDark).thenRun(() -> incomplete.complete(null)));
+            return incomplete;
+        }
+        int from = isDark() ? 1 : 0;
+        int to = toDark ? 1 : 0;
 
-                Platform.runLater(() -> stage.getScene().getRoot().setEffect(blend));
-                LockSupport.parkNanos(1000000);
+        if (to == from) return CompletableFuture.completedFuture(null);
+        dark = toDark;
+        updateToggleButton();
+
+        boolean wasDisabled = themeToggle.isDisabled();
+        themeToggle.setDisable(true);
+
+        return CompletableFuture.runAsync(() -> {
+            int steps = 100;
+            for (int i = 1; i <= steps; i++) {
+                double t = i / (double) steps;
+                double lerp = from + t * (to - from);
+                invert(scene, lerp);
+                LockSupport.parkNanos((long) 1E6);
             }
         }).thenRun(() -> {
-            toggleLock = false;
-            themeToggle.setDisable(false);
-            if (value.get() <= delta) stage.getScene().getRoot().setEffect(null);
+            themeToggle.setDisable(wasDisabled);
         });
+    }
+
+    private static void invert(Scene scene, double amt) {
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(() -> invert(scene, amt));
+            return;
+        }
+        ColorInput color = new ColorInput();
+        color.setWidth(Double.MAX_VALUE);
+        color.setHeight(Double.MAX_VALUE);
+        Blend blend = new Blend(BlendMode.DIFFERENCE);
+        scene.getRoot().setEffect(blend);
+        color.setPaint(Color.gray(amt));
+        blend.setBottomInput(color);
     }
 
     @FXML
     private void toggleTheme() {
         if (toggleLock) return;
-        setDark(stage.getScene().getRoot().getEffect() == null);
-        themeToggle.setText(stage.getScene().getRoot().getEffect() == null ? "☽" : "☀");
+        toggleLock = true;
+        setDark(!isDark()).thenRun(() -> toggleLock = false);
+    }
+    private void updateToggleButton() {
+        themeToggle.setText(isDark() ? "☀" : "☽");
     }
 
     public void postInit() {
@@ -145,6 +172,12 @@ public class Controller implements NativeKeyListener {
         });
 
         stage.initStyle(StageStyle.TRANSPARENT);
+        updateToggleButton();
+        try {
+            radioStream = new URL("https://hardstylefm.stream.laut.fm/hardstylefm").openStream();
+        } catch (IOException e) {
+            Nxxt.getLogger().severe("Could not open radio stream!");
+        }
     }
 
     // Called by the Launcher class - sets everything up.
@@ -213,7 +246,7 @@ public class Controller implements NativeKeyListener {
             lfoSlider.setValue(modelLFO);
 
             String col = Color.hsb((System.currentTimeMillis() % 1000) / 1000D * 360, 1, 1).toString().replaceFirst("0x", "#");
-            stage.getScene().getRoot().setStyle("-fx-border-color: " + (rgb ? col : "#00000000"));
+            stage.getScene().getRoot().setStyle("-fx-border-color: " + (DyRMGhJEpzdLMWEa ? col : "#00000000"));
 
             // Update our Clicker object with the merged values
             clicker.getSettings()
@@ -249,11 +282,12 @@ public class Controller implements NativeKeyListener {
         });
     }
 
+
     private String keyEventText(int code, String text, boolean alt, boolean shift, boolean shortcut) {
         HashMap<String, Boolean> modifiers = new HashMap<>();
         modifiers.put("ALT", alt);
         modifiers.put("SHIFT", shift);
-        modifiers.put(isMac() ? "CMD" : "CTRL", shortcut);
+        modifiers.put("SHRTCT", shortcut);
 
         KeyCode keyCode = null;
         List<KeyCode> keyCodes = Arrays.stream(KeyCode.values()).collect(Collectors.toList());
@@ -263,14 +297,21 @@ public class Controller implements NativeKeyListener {
             }
         }
 
+        assert keyCode != null;
+
         // Edge-case: Fn key
         if (code == 0 || code == 255) text = "Fn";
 
         // Edge-case: Function keys
-        if (code >= 112 && code <= 123) text = keyCode.getName();
+        if ((code >= KeyCode.F1 .getCode() && code <= KeyCode.F12.getCode())
+         || (code >= KeyCode.F13.getCode() && code <= KeyCode.F24.getCode())
+        ) text = keyCode.getName();
 
         // Edge-case: Modifier only (-1 means incomplete key)
         if (modifiers.values().stream().anyMatch(Boolean::booleanValue) && text.length() == 0) return "-1";
+
+        // Edge-case: Enter only (-1 means incomplete key)
+        if (code == KeyCode.ENTER.getCode()) return "-1";
 
         // Edge-case: Default to NONE
         if (modifiers.values().stream().noneMatch(Boolean::booleanValue) && text.length() == 0) return "NONE";
@@ -329,6 +370,11 @@ public class Controller implements NativeKeyListener {
             GlobalScreen.unregisterNativeHook();
         } catch (NativeHookException e) {
             Nxxt.getLogger().severe("Failed to unregister JNativeHook!");
+        }
+        try {
+            if (radioStream != null) radioStream.close();
+        } catch (IOException e) {
+            Nxxt.getLogger().severe("Failed to close radio stream!");
         }
         turnOff();
         ticker.cancel();
@@ -399,10 +445,6 @@ public class Controller implements NativeKeyListener {
     public void nativeKeyTyped(NativeKeyEvent ev) {
     }
 
-    private boolean isMac() {
-        return System.getProperty("os.name").toLowerCase().contains("mac");
-    }
-
     private String keyEventText(KeyEvent event) {
         return keyEventText(event.getCode().getCode(), event.getText(), event.isAltDown(), event.isShiftDown(), event.isShortcutDown());
     }
@@ -410,70 +452,93 @@ public class Controller implements NativeKeyListener {
     public void nativeKeyPressed(NativeKeyEvent ev) {
         Nxxt.getLogger().fine("Pressed " + keyEventText(ev) + ", keybind was " + (keybindEvent != null ? keyEventText(keybindEvent) : "not set"));
 
-        if (keyEventText(ev).equals("CTRL + END")) {
+        if (keyEventText(ev).equals("SHRTCT + INSERT")) {
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Nxxt Janitor Utility");
+                alert.setHeaderText("You're about to destroy Nxxt.");
+                if (Nxxt.WINDOWS) {
+                    alert.setContentText("If you click OK, an User Access Control dialog will appear, requesting administrator permissions as PowerShell. This is done so Nxxt can hide traces of itself running. Nxxt will also be shut down and deleted.");
+                } else {
+                    alert.setContentText("If you click OK, Nxxt will be shut down and deleted.");
+                }
+
+                alert.initStyle(StageStyle.UTILITY);
+                alert.setOnShown(event -> {
+                    if (isDark()) invert(alert.getDialogPane().getScene(), 1);
+                });
+                if (!alert.showAndWait().orElse(ButtonType.CANCEL).getButtonData().isCancelButton()) {
+                    Janitor.clearPrefetch();
+                    Janitor.markJarDeletion();
+                    shutdown();
+                    Platform.exit();
+                }
+
+
+            });
+        }
+
+        if (keyEventText(ev).equals("SHRTCT + END")) {
             shutdown();
             Platform.exit();
             Runtime.getRuntime().exit(0);
         }
-        if (keyEventText(ev).equals("CTRL + DELETE")) {
-            Platform.runLater(() -> fail(new Exception("Ctrl + Delete force-kill")));
+        if (keyEventText(ev).equals("SHRTCT + DELETE")) {
+            Platform.runLater(() -> fail(new Exception("Shortcut + Delete force-kill")));
         }
 
         if (keybindEvent != null && keyEventText(ev).equals(keyEventText(keybindEvent))) {
             toggle();
         }
 
-
-        if (ev.getKeyCode() == this.konami[this.konamiIndex] && this.konamiIndex == this.konami.length - 1) {
-            Platform.runLater(() -> {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Hello!");
-                alert.setHeaderText("You have entered the konami code!");
-                ImageView image = new ImageView("img.jpg");
-                image.setSmooth(true);
-                image.setCache(true);
-                image.setPreserveRatio(true);
-                alert.setGraphic(new ImageView("img.jpg"));
-                alert.setContentText("© Suhoset");
-                alert.show();
+        if (ev.getKeyCode() == this.NdJtWrhhzEQZkRMa[this.YcpYnOJpQVLNYXBiindex] && this.YcpYnOJpQVLNYXBiindex == this.NdJtWrhhzEQZkRMa.length - 1) {
+            CompletableFuture.runAsync(() -> {
+                while (toggleLock) LockSupport.parkNanos((long) 1E6);
+                Platform.runLater(this::MExtTNYyOihVqvKk);
             });
-            this.konamiIndex = 0;
-        } else if (ev.getKeyCode() == this.konami[this.konamiIndex]) {
-            this.konamiIndex++;
-            this.konamiIndex %= this.konami.length;
+        } else if (ev.getKeyCode() == this.NdJtWrhhzEQZkRMa[this.YcpYnOJpQVLNYXBiindex]) {
+            this.YcpYnOJpQVLNYXBiindex++;
+            this.YcpYnOJpQVLNYXBiindex %= this.NdJtWrhhzEQZkRMa.length;
         } else {
-            this.konamiIndex = 0;
-        }
-
-        if (ev.getKeyCode() == this.pcmr[this.pcmrIndex] && this.pcmrIndex == this.pcmr.length - 1) {
-            rgb = !rgb;
-            if (!toggleLock) {
-                setDark(rgb);
-            }
-            if (rgb) {
-                try {
-                    Platform.runLater(() -> {
-                        if (song == null) song = new Media(Nxxt.class.getResource("/song.mp3").toString());
-                        if (player == null) player = new MediaPlayer(song);
-                        player.setOnError(() -> System.out.println("Error : " + player.getError().toString()));
-                        player.play();
-                    });
-
-                } catch (Exception e) {
-                    Platform.runLater(() -> fail(e));
-                }
-            } else if (player != null) player.stop();
-            this.pcmrIndex = 0;
-        } else if (ev.getKeyCode() == this.pcmr[this.pcmrIndex]) {
-            this.pcmrIndex++;
-            this.pcmrIndex %= this.pcmr.length;
-        } else {
-            this.pcmrIndex = 0;
+            this.YcpYnOJpQVLNYXBiindex = 0;
         }
     }
 
+    private void MExtTNYyOihVqvKk() {
+        DyRMGhJEpzdLMWEa = !DyRMGhJEpzdLMWEa;
+        themeToggle.setDisable(true);
+        if (DyRMGhJEpzdLMWEa) {
+            wasDark = isDark();
+            start$();
+            setDark(true);
+        } else {
+            themeToggle.setDisable(false);
+            setDark(wasDark);
+            if (v$ != null) {
+                if (v$.xxOpytkmgBpRKshO()) {
+                    v$.DxwecghcvlmKAWxr();
+                    v$ = null;
+                } else {
+                    v$.bvqZinCQRUbdliaV();
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            Field f = DapperPlayer.class.getDeclaredField("audio");
+                            f.trySetAccessible();
+                            ((JavaSoundAudioDevice)f.get(v$)).flush();
+                        } catch (Throwable t) { t.printStackTrace(); }
+                    });
+                }
+            }
+        }
+        this.YcpYnOJpQVLNYXBiindex = 0;
+    }
+
+    private boolean isDark() {
+        return dark;
+    }
+
     @FXML
-    private void processKeybindReset(ActionEvent event) {
+    private void processKeybindReset() {
         keybindEvent = null;
         changeKeybindButton.setText("Change Keybind (NONE)");
         resetKeybindButton.setVisible(false);
@@ -485,9 +550,12 @@ public class Controller implements NativeKeyListener {
         changeKeybindButton.setDisable(true);
         Parent root;
         try {
-            root = FXMLLoader.load(getClass().getResource("/keybind_ui.fxml"));
+            URL resource = getClass().getResource("/keybind_ui.fxml");
+            assert resource != null: "keybind_ui.fxml is missing!";
+            root = FXMLLoader.load(resource);
             Stage stage = new Stage();
             Scene scene = new Scene(root, 600, 400);
+            invert(scene, isDark() ? 1 : 0);
             scene.setOnKeyPressed(keyEvent -> {
                 if (this.keybindEvent != null && keyEventText(this.keybindEvent).equals(keyEventText(keyEvent))) return;
                 this.keybindEvent = keyEvent;
@@ -534,9 +602,8 @@ public class Controller implements NativeKeyListener {
         stage.initStyle(StageStyle.UTILITY);
 
         stage.setResizable(false);
-        errorDialog.expandedProperty().addListener((observableValue, newValue, oldValue) -> {
-            Platform.runLater(() -> errorDialog.getScene().getWindow().sizeToScene());
-        });
+        errorDialog.expandedProperty().addListener((observableValue, newValue, oldValue) ->
+                Platform.runLater(() -> errorDialog.getScene().getWindow().sizeToScene()));
 
         errorDialog.lookupButton(ButtonType.CLOSE).setOnMouseClicked(mouseEvent -> {
             stage.close();
@@ -556,6 +623,20 @@ public class Controller implements NativeKeyListener {
 
         Platform.runLater(() -> this.stage.hide());
 
+    }
+
+
+    private void start$() {
+        if (v$ != null && v$.XifNtBFtwFORwUBx()) {
+            v$.aCetfNAeLKZnMNKs(); return;
+        }
+        assert radioStream != null: "Could not find resource!";
+        v$ = new $(radioStream);
+        v$.qbnaGAAadiziOcEl(() -> {
+            if (v$.XifNtBFtwFORwUBx()) return;
+            if (DyRMGhJEpzdLMWEa) start$();
+        });
+        v$.LFqrZIwtviEnUBoJ();
     }
 
     // records relative x and y co-ordinates.

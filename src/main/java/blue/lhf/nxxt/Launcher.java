@@ -1,4 +1,4 @@
-package io.github.bluelhf.nxxt;
+package blue.lhf.nxxt;
 
 import javafx.application.Application;
 import javafx.application.Platform;

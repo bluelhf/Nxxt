@@ -1,23 +1,18 @@
-package io.github.bluelhf.nxxt;
+package blue.lhf.nxxt.clicker;
 
 import java.awt.event.InputEvent;
 
+@SuppressWarnings({"UnusedReturnValue", "unused"})
 public class ClickerSettings {
     private double lfo;
     private double delay;
     private double jitter;
     private ClickType clickType;
-    ClickerSettings(double delay, double lfo, double jitter, ClickType clickType) {
+    public ClickerSettings(double delay, double lfo, double jitter, ClickType clickType) {
         this.delay = delay;
         this.lfo = lfo;
         this.jitter = jitter;
         this.clickType = clickType;
-    }
-    ClickerSettings(double delay, ClickType clickType) {
-        this(delay, -1, -1, clickType);
-    }
-    ClickerSettings(double delay) {
-        this(delay, -1, -1, ClickType.LEFT);
     }
 
     public boolean doLFO() {
@@ -37,6 +32,7 @@ public class ClickerSettings {
     public double getJitter() {
         return jitter > 0 ? jitter : -1;
     }
+
     public ClickerSettings setJitter(double jitter) {
         this.jitter = jitter;
         return this;
