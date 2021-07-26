@@ -28,9 +28,13 @@ build it directly from this repository!
 5. Get your .jar from the `target` subdirectory
 6. Profit!
 
-### Windows Defender
-Running Nxxt between versions B1 and B2 might greet you with a "Windows protected your PC" screen.
+<details>
+  <summary>Extra info for older versions</summary>
+  
+  ### Windows Defender
+  Running Nxxt between versions B1 and B2 might greet you with a "Windows protected your PC" screen.
 
-This is Windows Defender's SmartScreen. It recognises .exe files with no publisher
-and gives you a fair warning. To run the executable anyways (in case you see this),
-click on the "More Info" text and then click the "Run Anyway" button.
+  This is Windows Defender's SmartScreen. It recognises .exe files with no publisher
+  and gives you a fair warning. To run the executable anyways (in case you see this),
+  click on the "More Info" text and then click the "Run Anyway" button.
+</details>
