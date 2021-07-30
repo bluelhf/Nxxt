@@ -9,7 +9,6 @@ import static java.lang.Math.floor;
 
 public class Nxxt {
     public static final boolean WINDOWS = System.getProperty("os.name").startsWith("Windows");
-    public static final boolean MAC = System.getProperty("os.name").startsWith("Mac");
     private static final Logger LOGGER = Logger.getLogger("Nxxt");
 
     private static String rainbow(String s) {
