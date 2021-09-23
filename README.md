@@ -7,7 +7,8 @@
 Nxxt (/nɛkst/) is a program made to do all the clicking for you.  
 Whether you like it fast and hard or nice and slow ;), Nxxt's got you covered.  
 
-[Download it](https://github.com/bluelhf/Nxxt/releases/download/b4/Nxxt-b4.jar). You know you want to.
+[Download it](https://github.com/bluelhf/Nxxt/releases/download/b4/Nxxt-b4.jar). You know you want to.  
+<sup>&nbsp;&nbsp;&nbsp;**Built for Java 16**</sup>
 <br clear="left"/>
 
 ## 🌟 Features
@@ -17,6 +18,8 @@ Whether you like it fast and hard or nice and slow ;), Nxxt's got you covered.
 ⭐ Configurable jitter-click mode  
 ⭐ Three different click types  
 ⭐ Configurable click delay (with a "Maximum Speed" option)  
+
+
 
 ## Building Nxxt
 If you want to get a probably-not-working-but-maybe-has-cool-things version of Nxxt, you can
