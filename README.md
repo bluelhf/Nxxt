@@ -41,3 +41,6 @@ build it directly from this repository!
   and gives you a fair warning. To run the executable anyways (in case you see this),
   click on the "More Info" text and then click the "Run Anyway" button.
 </details>
+
+## How to end it?
+Press Ctrl + Alt + Del
