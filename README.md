@@ -19,7 +19,13 @@ Whether you like it fast and hard or nice and slow ;), Nxxt's got you covered.
 ⭐ Three different click types  
 ⭐ Configurable click delay (with a "Maximum Speed" option)  
 
+## 💔 Broke something?
 
+If at any time you want to kill Nxxt as quick as possible, there's a few hidden shortcuts for you:
+- **Ctrl / Cmd + End** - Terminates the program immediately
+- **Ctrl / Cmd + Del** - Causes the program to crash
+
+On Windows, opening Windows Security via Ctrl + Alt + Del or having the window focus on Task Manager causes Nxxt to stop clicking.
 
 ## Building Nxxt
 If you want to get a probably-not-working-but-maybe-has-cool-things version of Nxxt, you can
