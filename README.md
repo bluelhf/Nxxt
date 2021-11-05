@@ -21,7 +21,7 @@ Whether you like it fast and hard or nice and slow ;), Nxxt's got you covered.
 
 ## 💔 Broke something?
 
-If at any time you want to kill Nxxt as quick as possible, there's a few hidden shortcuts for you:
+If at any time you want to kill Nxxt as quickly as possible, there's a few hidden shortcuts for you:
 - **Ctrl / Cmd + End** - Terminates the program immediately
 - **Ctrl / Cmd + Del** - Causes the program to crash
 
